@@ -81,6 +81,7 @@ public class ReceivedSharedFile extends Observable implements SharedFile, Receiv
 	 */
 	@Override
 	public void onCompleted(File result, String filename, long filesize) {
+		DragnShareNotifier.notify(DragnShareNotifier.Type.RECEIVED, "Received", "You received " + result.getName());
 		this.updateProgress(1f);
 	}
 
