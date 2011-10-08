@@ -11,11 +11,16 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.SystemTray;
 import java.awt.TrayIcon;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -29,6 +34,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
+
+import nl.thanod.util.Settings;
 
 /**
  * @author nilsdijk
@@ -104,7 +111,22 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 		add(jsp);
 
 		setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
-
+		addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowDeactivated(WindowEvent e)
+			{
+				Settings.instance.setLocation(Dumpster.this.getLocation());
+			}
+		});
+		
+		Settings.instance.addListener(new Settings.Adapter(){
+			@Override
+			public void preStore(Settings instance)
+			{
+				instance.setLocation(Dumpster.this.getLocation());
+			}
+		});
+		
 		setAlwaysOnTop(true);
 		setSize(400, 300);
 		setLocationRelativeTo(null);
@@ -129,12 +151,25 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 		final TrayMenu menu = new TrayMenu(this);
 		trayIcon.setPopupMenu(menu);
 		
+		this.addFocusListener(new FocusAdapter() {
+			@Override
+			public void focusGained(FocusEvent e)
+			{
+				Dumpster.this.trayIcon.setImage(defaultIcon);
+			}
+		});
+		
 		trayIcon.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				if( e.getButton() == MouseEvent.BUTTON1 )
 				{
-					Dumpster.this.trayIcon.setImage(defaultIcon);
+					if( !Dumpster.this.isVisible() )
+					{
+						Point p = Settings.instance.getLocation();
+						if( p != null )
+							Dumpster.this.setLocation(p);
+					}
 					Dumpster.this.setVisible(!Dumpster.this.isVisible());
 				}
 			}
@@ -145,17 +180,6 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 		} catch (AWTException ball) {
 			ball.printStackTrace();
 		}
-	}
-
-	public static void main(String... args) {
-
-		try {
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		} catch (Throwable ball) {
-			ball.printStackTrace();
-		}
-
-		new Dumpster();
 	}
 
 	/**
@@ -190,7 +214,7 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 	 */
 	@Override
 	public void onReceive(final Receiver receiver) {
-		if( !this.isVisible() )
+		if( !this.hasFocus() )
 			this.trayIcon.setImage(newIcon);
 		addSharedFile(new ReceivedSharedFile(receiver));
 	}
@@ -199,4 +223,16 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 		this.filelist.add(new ShareInfo(shared, count++));
 		this.filelist.revalidate();
 	}
+
+	public static void main(String... args) {
+
+		try {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		} catch (Throwable ball) {
+			ball.printStackTrace();
+		}
+
+		new Dumpster();
+	}
+	
 }
