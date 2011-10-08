@@ -12,7 +12,7 @@ public class MulticastShare extends Thread
 {
 	public interface Listener {
 		void onReceive(Receiver receiver);
-	}	
+	}
 
 	public static final int MULTICASTPORT = 5432;
 	public static final String GROUP = "224.0.13.37";
@@ -134,17 +134,7 @@ public class MulticastShare extends Thread
 			
 			@Override
 			public void onReceive(Receiver receiver) {
-				receiver.addCompletionListener(new Receiver.Listener() {
-					
-					@Override
-					public void onStart(File result, String filename, long filesize) {}
-					
-					@Override
-					public void onProgress(File result, String filename, long filesize, long received) {}
-					
-					@Override
-					public void onError(File target, String filename, long filesize, IOException e) {}
-					
+				receiver.addCompletionListener(new Receiver.Adapter() {
 					@Override
 					public void onCompleted(File result, String filename, long filesize) {
 						System.out.println("received " + result.getName());

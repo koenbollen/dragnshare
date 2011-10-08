@@ -20,6 +20,35 @@ public class Receiver extends Thread
 		void onCompleted(File result, String filename, long filesize);
 		void onError(File target, String filename, long filesize, IOException e);
 	}
+	
+	public static abstract class Adapter implements Listener
+	{
+
+		/* (non-Javadoc)
+		 * @see it.koen.dragnshare.net.Receiver.Listener#onStart(java.io.File, java.lang.String, long)
+		 */
+		@Override
+		public void onStart(File result, String filename, long filesize) {}
+
+		/* (non-Javadoc)
+		 * @see it.koen.dragnshare.net.Receiver.Listener#onProgress(java.io.File, java.lang.String, long, long)
+		 */
+		@Override
+		public void onProgress(File result, String filename, long filesize, long received) {}
+
+		/* (non-Javadoc)
+		 * @see it.koen.dragnshare.net.Receiver.Listener#onCompleted(java.io.File, java.lang.String, long)
+		 */
+		@Override
+		public void onCompleted(File result, String filename, long filesize) {}
+
+		/* (non-Javadoc)
+		 * @see it.koen.dragnshare.net.Receiver.Listener#onError(java.io.File, java.lang.String, long, java.io.IOException)
+		 */
+		@Override
+		public void onError(File target, String filename, long filesize, IOException e) {}
+		
+	}
 
 	public enum Status
 	{
