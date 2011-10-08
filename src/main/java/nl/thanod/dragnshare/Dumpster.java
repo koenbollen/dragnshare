@@ -150,7 +150,7 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 		this.trayIcon.setImageAutoSize(true);
 		final TrayMenu menu = new TrayMenu(this);
 		trayIcon.setPopupMenu(menu);
-		
+
 		this.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusGained(FocusEvent e)
@@ -166,6 +166,7 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 				{
 					if( !Dumpster.this.isVisible() )
 					{
+						Dumpster.this.trayIcon.setImage(defaultIcon);
 						Point p = Settings.instance.getLocation();
 						if( p != null )
 							Dumpster.this.setLocation(p);

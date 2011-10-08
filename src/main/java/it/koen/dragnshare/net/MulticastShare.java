@@ -21,17 +21,35 @@ public class MulticastShare extends Thread
 	private InetAddress group;
 	private MulticastSocket multisocket;
 
-	private HashMap<UUID, File> files;
+	private Map<UUID, File> files;
 	
 	private final List<Listener> listeners;
+	
+	private final Set<File> filesCreated;
 
 	public MulticastShare()
 	{
 		super("Multisharer");
 		this.setDaemon(true);
-		this.files = new HashMap<UUID, File>();
 		this.multisocket = null;
+		this.files = Collections.synchronizedMap(new HashMap<UUID, File>());
 		this.listeners = Collections.synchronizedList(new ArrayList<Listener>());
+		this.filesCreated = Collections.synchronizedSet(new HashSet<File>());
+		
+		Runtime.getRuntime().addShutdownHook(new Thread(){
+			@Override
+			public void run()
+			{
+				for( File f : MulticastShare.this.filesCreated )
+				{
+					if( f.exists() )
+						f.delete();
+					f = f.getParentFile();
+					if( f.exists() && f.isDirectory() && f.getName().startsWith("dragnshare") )
+						f.delete();
+				}
+			}
+		});
 	}
 
 	public void connect() throws IOException
@@ -79,6 +97,7 @@ public class MulticastShare extends Thread
 				{
 					r.connect();
 					
+					this.filesCreated.add(r.getTarget());
 					List<Listener> listeners = new ArrayList<MulticastShare.Listener>(this.listeners);
 					for (Listener listener:listeners)
 						listener.onReceive(r);
