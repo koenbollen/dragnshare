@@ -8,11 +8,15 @@ import it.koen.dragnshare.net.Receiver;
 
 import java.awt.AWTException;
 import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.RenderingHints;
 import java.awt.SystemTray;
 import java.awt.TrayIcon;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -113,8 +117,8 @@ public class Dumpster extends JFrame implements MulticastShare.Listener {
 			}
 		});
 
-		final TrayIcon trayIcon = new TrayIcon(createImage("dragn.png"));
 		final SystemTray tray = SystemTray.getSystemTray();
+		final TrayIcon trayIcon = new TrayIcon(createImage("dragn.png", tray.getTrayIconSize()));
 
 		trayIcon.addMouseListener(new MouseAdapter() {
 			
@@ -135,10 +139,20 @@ public class Dumpster extends JFrame implements MulticastShare.Listener {
 	 * @param string
 	 * @return
 	 */
-	private static Image createImage(String string) {
+	private static Image createImage(String string, Dimension size) {
 		try {
 			URL url = Dumpster.class.getClassLoader().getResource(string);
-			return ImageIO.read(url);
+			BufferedImage img = ImageIO.read(url);
+			if( size != null )
+			{
+				BufferedImage scaled = new BufferedImage(size.width, size.height, BufferedImage.TYPE_INT_ARGB);
+				Graphics2D graphics = scaled.createGraphics();
+				graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+				graphics.drawImage(img, 0, 0, size.width, size.height, null);
+				graphics.dispose();
+				return scaled;
+			}
+			return img;
 		} catch (Throwable ball) {
 			ball.printStackTrace();
 			return null;
