@@ -1,13 +1,10 @@
 package it.koen.dragnshare.net;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -16,9 +13,12 @@ public class Receiver extends Thread
 
 	public static final int BUFFERSIZE = 4096;
 
-	public interface CompletionListener
+	public interface Listener
 	{
+		void onStart(File result, String filename, long filesize);
+		void onProgress(File result, String filename, long filesize, long received);
 		void onCompleted(File result, String filename, long filesize);
+		void onError(File target, String filename, long filesize, IOException e);
 	}
 
 	public enum Status
@@ -31,7 +31,7 @@ public class Receiver extends Thread
 	private String filename;
 	private long filesize;
 	private volatile Status currentStatus;
-	private List<CompletionListener> completionListeners;
+	private final List<Listener> listeners;
 
 	public Receiver(UUID id, String filename, long filesize, File target)
 	{
@@ -40,7 +40,7 @@ public class Receiver extends Thread
 		this.filename = filename;
 		this.filesize = filesize;
 		this.currentStatus = Status.STARTING;
-		this.completionListeners = new ArrayList<Receiver.CompletionListener>();
+		this.listeners = Collections.synchronizedList(new ArrayList<Receiver.Listener>());
 
 		this.s = null;
 	}
@@ -72,6 +72,10 @@ public class Receiver extends Thread
 			InputStream in = client.getInputStream();
 			OutputStream out = new FileOutputStream(this.target);
 
+			List<Listener> listeners = new ArrayList<Receiver.Listener>(this.listeners);
+			for (Listener listener:listeners)
+				listener.onStart(this.target,filename, this.filesize);
+			
 			currentStatus = Status.TRANSFERRING;
 			do
 			{
@@ -80,6 +84,11 @@ public class Receiver extends Thread
 				{
 					count += n;
 					out.write(buffer, 0, n);
+					
+					// notify listeners of received content
+					listeners = new ArrayList<Receiver.Listener>(this.listeners);
+					for (Listener listener:listeners)
+						listener.onProgress(this.target,filename, this.filesize, count);
 				}
 			} while (n > 0);
 
@@ -88,25 +97,31 @@ public class Receiver extends Thread
 
 			this.currentStatus = Status.COMPLETED;
 
-			for (CompletionListener l : this.completionListeners)
-				l.onCompleted(target, filename, this.filesize);
+			listeners = new ArrayList<Receiver.Listener>(this.listeners);
+			for (Listener listener:listeners)
+				listener.onCompleted(target, filename, this.filesize);
 
 		} catch (IOException e)
 		{
 			this.currentStatus = Status.FAILED;
+			
+			List<Listener> listeners = new ArrayList<Receiver.Listener>(this.listeners);
+			for (Listener listener:listeners)
+				listener.onError(target, filename, this.filesize, e);
+					
 			e.printStackTrace();
 		}
 	}
 
-	public void addCompletionListener(CompletionListener listener)
+	public void addCompletionListener(Listener listener)
 	{
-		if (!this.completionListeners.contains(listener))
-			this.completionListeners.add(listener);
+		if (!this.listeners.contains(listener))
+			this.listeners.add(listener);
 	}
 
-	public boolean removeCompletionListener(CompletionListener listener)
+	public boolean removeCompletionListener(Listener listener)
 	{
-		return this.completionListeners.remove(listener);
+		return this.listeners.remove(listener);
 	}
 
 	public int getLocalPort()
@@ -129,5 +144,17 @@ public class Receiver extends Thread
 	public boolean isCompleted()
 	{
 		return this.currentStatus == Status.COMPLETED;
+	}
+	
+	public File getTarget() {
+		return target;
+	}
+
+	public String getFilename() {
+		return filename;
+	}
+
+	public long getFilesize() {
+		return filesize;
 	}
 }
