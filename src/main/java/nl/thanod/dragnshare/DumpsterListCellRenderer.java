@@ -22,7 +22,8 @@ public class DumpsterListCellRenderer implements ListCellRenderer {
 		SELECTED(Color.BLUE, Color.BLUE),
 		DEFAULT(Color.GRAY, Color.LIGHT_GRAY),
 		RECEIVED(Color.CYAN, Color.CYAN),
-		OFFERED(Color.ORANGE, Color.YELLOW);
+		OFFERED(Color.ORANGE, Color.YELLOW),
+		ERROR(Color.RED, Color.RED);
 
 		private final Color c1;
 		private final Color c2;
@@ -39,9 +40,8 @@ public class DumpsterListCellRenderer implements ListCellRenderer {
 		}
 	}
 
-	private final Map<Object, WeakReference<ShareInfo>> map = new HashMap<Object, WeakReference<ShareInfo>>();
 	private final ShareInfo info = new ShareInfo();
-	
+
 	/*
 	 * (non-Javadoc)
 	 * @see

@@ -19,6 +19,7 @@ public class ReceivedSharedFile extends Observable implements SharedFile, Receiv
 	private Receiver receiver;
 	private File file;
 	private volatile float progress;
+	private ColorScheme colorScheme = ColorScheme.RECEIVED;
 
 	/**
 	 * @param receiver
@@ -91,6 +92,10 @@ public class ReceivedSharedFile extends Observable implements SharedFile, Receiv
 	 * @param f
 	 */
 	private void updateProgress(float progress) {
+		if (progress < 1)
+			colorScheme = ColorScheme.RECEIVED;
+		else
+			colorScheme = ColorScheme.DEFAULT;
 		this.progress = progress;
 
 		this.setChanged();
@@ -105,14 +110,18 @@ public class ReceivedSharedFile extends Observable implements SharedFile, Receiv
 	@Override
 	public void onError(File target, String filename, long filesize, IOException e) {
 		e.printStackTrace();
+		updateProgress(1f);
+		colorScheme = ColorScheme.ERROR;
+		setChanged();
+		notifyObservers();
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
 	 * @see nl.thanod.dragnshare.SharedFile#getColorScheme()
 	 */
 	@Override
 	public ColorScheme getColorScheme() {
-		return ColorScheme.RECEIVED;
+		return this.colorScheme ;
 	}
-
 }

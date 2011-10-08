@@ -3,13 +3,7 @@
  */
 package nl.thanod.dragnshare;
 
-import java.awt.Desktop;
 import java.awt.Dimension;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.io.IOException;
-import java.util.Observable;
-import java.util.Observer;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
