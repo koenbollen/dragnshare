@@ -3,10 +3,7 @@
  */
 package nl.thanod.dragnshare;
 
-import java.awt.Color;
-import java.awt.Container;
-import java.awt.Desktop;
-import java.awt.Dimension;
+import java.awt.*;
 import java.awt.datatransfer.Transferable;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DragGestureEvent;
@@ -27,6 +24,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JRootPane;
+
+import nl.thanod.util.RecursiveSwing;
 
 /**
  * @author nilsdijk
@@ -117,13 +116,16 @@ public class ShareInfo extends JPanel {
 					
 					@Override
 					public void dragDropEnd(DragSourceDropEvent dsde) {
+						Window w = RecursiveSwing.getContainingWindow(ShareInfo.this);
 						if( dsde.getDropAction() == DnDConstants.ACTION_MOVE )
 						{
 							JRootPane p = ShareInfo.this.getRootPane();
 							Container c = ShareInfo.this.getParent();
 							c.remove(ShareInfo.this);
 							p.revalidate();
-						}
+						}						
+						if (w != null)
+							w.setVisible(false);
 					}
 				});
 			}
