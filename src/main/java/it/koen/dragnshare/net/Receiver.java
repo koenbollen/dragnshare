@@ -142,7 +142,7 @@ public class Receiver extends Thread
 		}
 	}
 
-	public void addCompletionListener(Listener listener)
+	public void addCompletionListener(Receiver.Listener listener)
 	{
 		if (!this.listeners.contains(listener))
 			this.listeners.add(listener);

@@ -27,6 +27,8 @@ public class MulticastShare extends Thread
 
 	public MulticastShare()
 	{
+		super("Multisharer");
+		this.setDaemon(true);
 		this.files = new HashMap<UUID, File>();
 		this.multisocket = null;
 		this.listeners = Collections.synchronizedList(new ArrayList<Listener>());
