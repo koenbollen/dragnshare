@@ -46,7 +46,7 @@ public final class DragnShareNotifier {
 	
 	private DragnShareNotifier(){}
 
-	private static GrowlWrapper GROWL = new GrowlWrapper("Drag'nShare", "DragnShare", Type.getAllNotifications(), Type.getDefaultNotifications());
+	private static GrowlWrapper GROWL = new GrowlWrapper("Drag'n Share", "DragnShare", Type.getAllNotifications(), Type.getDefaultNotifications());
 	
 	public static void notify(DragnShareNotifier.Type type, String title, String message){
 		if (GROWL != null)

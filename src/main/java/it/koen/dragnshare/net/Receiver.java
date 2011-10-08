@@ -93,13 +93,15 @@ public class Receiver extends Thread
 		if (s == null)
 			throw new RuntimeException("connect() before start()ing thread.");
 		this.currentStatus = Status.LISTENING;
+		Socket client = null;
+		OutputStream out = null;
 		try
 		{
 			int n = 0, count = 0;
 			byte[] buffer = new byte[BUFFERSIZE + 1];
-			Socket client = s.accept();
+			client = s.accept();
 			InputStream in = client.getInputStream();
-			OutputStream out = new FileOutputStream(this.target);
+			out = new FileOutputStream(this.target);
 
 			List<Listener> listeners = new ArrayList<Receiver.Listener>(this.listeners);
 			for (Listener listener:listeners)
@@ -139,6 +141,23 @@ public class Receiver extends Thread
 				listener.onError(target, filename, this.filesize, e);
 					
 			e.printStackTrace();
+		} finally
+		{
+			try
+			{
+				if (s != null)
+					s.close();
+			} catch (IOException e)
+			{
+			}
+			try
+			{
+				if (out != null)
+					out.close();
+			} catch (IOException e)
+			{
+
+			}
 		}
 	}
 
