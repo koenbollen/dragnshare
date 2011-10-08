@@ -119,12 +119,14 @@ public class Dumpster extends JFrame implements MulticastShare.Listener {
 
 		final SystemTray tray = SystemTray.getSystemTray();
 		final TrayIcon trayIcon = new TrayIcon(createImage("dragn.png", tray.getTrayIconSize()));
-
+		final TrayMenu menu = new TrayMenu(dump);
+		trayIcon.setPopupMenu(menu);
+		
 		trayIcon.addMouseListener(new MouseAdapter() {
-			
 			@Override
-			public void mousePressed(MouseEvent paramMouseEvent) {
-				dump.setVisible(true);
+			public void mousePressed(MouseEvent e) {
+				if( e.getButton() == MouseEvent.BUTTON1 )
+					dump.setVisible(!dump.isVisible());
 			}
 		});
 
