@@ -6,34 +6,15 @@ package nl.thanod.dragnshare;
 import it.koen.dragnshare.net.MulticastShare;
 import it.koen.dragnshare.net.Receiver;
 
-import java.awt.AWTException;
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.Frame;
-import java.awt.Graphics2D;
-import java.awt.Point;
-import java.awt.RenderingHints;
-import java.awt.SystemTray;
-import java.awt.TrayIcon;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.*;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 
 import javax.imageio.ImageIO;
-import javax.swing.BoxLayout;
-import javax.swing.JDialog;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.UIManager;
-import javax.swing.WindowConstants;
+import javax.swing.*;
 
 import nl.thanod.util.Settings;
 
@@ -52,9 +33,9 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 
 	private final JPanel filelist;
 
-	private TrayIcon trayIcon;
-	private BufferedImage defaultIcon;
-	private BufferedImage newIcon;
+	protected TrayIcon trayIcon;
+	protected BufferedImage defaultIcon;
+	protected BufferedImage newIcon;
 
 	public Dumpster() {
 		super((Frame)null,"Drag'n Share");
