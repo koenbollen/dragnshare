@@ -140,6 +140,14 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 			}
 		});
 		
+		this.addFocusListener(new FocusAdapter() {
+			@Override
+			public void focusGained(FocusEvent e)
+			{
+				Dumpster.this.trayIcon.setImage(defaultIcon);
+			}
+		});
+		
 		trayIcon.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
