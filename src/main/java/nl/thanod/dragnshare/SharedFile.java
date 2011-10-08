@@ -17,4 +17,6 @@ public interface SharedFile {
 	String getName();
 	
 	float getProgress();
+	
+	DumpsterListCellRenderer.ColorScheme getColorScheme();
 }

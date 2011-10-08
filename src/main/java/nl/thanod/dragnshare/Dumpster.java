@@ -7,15 +7,20 @@ import it.koen.dragnshare.net.MulticastShare;
 import it.koen.dragnshare.net.Receiver;
 
 import java.awt.*;
+import java.awt.datatransfer.Transferable;
+import java.awt.dnd.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 
+import nl.thanod.dragnshare.DumpsterListCellRenderer.ColorScheme;
 import nl.thanod.util.Settings;
 
 /**
@@ -31,7 +36,9 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 
 	protected final MulticastShare sharer;
 
-	private final JPanel filelist;
+	protected final DefaultListModel filelist;
+
+	protected final JList list;
 
 	protected TrayIcon trayIcon;
 	protected BufferedImage defaultIcon;
@@ -54,8 +61,34 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 		this.setModal(true);
 		this.setResizable(false);
 
-		this.filelist = new JPanel();
-		filelist.setLayout(new BoxLayout(filelist, BoxLayout.Y_AXIS));
+		this.filelist = new ObservingDefaultListModel();
+		
+		list = new JList(this.filelist);
+		list.addMouseListener(new MouseAdapter() {
+			/* (non-Javadoc)
+			 * @see java.awt.event.MouseAdapter#mouseClicked(java.awt.event.MouseEvent)
+			 */
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if (e.getClickCount() == 2){
+					if (Desktop.isDesktopSupported()){
+						for (Object o:list.getSelectedValues()){
+							if (o instanceof SharedFile){
+								try {
+									Desktop.getDesktop().open(((SharedFile)o).getFile());
+								} catch (IOException ball) {
+									ball.printStackTrace();
+								}
+							}
+						}
+					}
+				}
+			}
+		});
+		
+		list.setCellRenderer(new DumpsterListCellRenderer());
+		list.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		
 		new FileDrop(this, new FileDrop.Listener() {
 			@Override
 			public void filesDropped(File[] files) {
@@ -74,7 +107,12 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 
 						@Override
 						public float getProgress() {
-							return 0;
+							return 1;
+						}
+
+						@Override
+						public ColorScheme getColorScheme() {
+							return ColorScheme.OFFERED;
 						}
 					});
 				}
@@ -84,10 +122,7 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 
 		this.sharer.addMulticastListener(this);
 
-		JPanel container = new JPanel(new BorderLayout());
-		container.setOpaque(false);
-		container.add(this.filelist, BorderLayout.NORTH);
-		JScrollPane jsp = new JScrollPane(container);
+		JScrollPane jsp = new JScrollPane(list);
 		jsp.setBorder(null);
 		add(jsp);
 
@@ -111,6 +146,42 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 		setAlwaysOnTop(true);
 		setSize(400, 300);
 		setLocationRelativeTo(null);
+		
+		initDragable();
+	}
+	
+	private void initDragable() {
+		final DragSource ds = new DragSource();
+		ds.createDefaultDragGestureRecognizer(this.list, DnDConstants.ACTION_COPY_OR_MOVE, new DragGestureListener() {
+
+			@Override
+			public void dragGestureRecognized(DragGestureEvent evt) {
+				//get files
+				List<File> files = new ArrayList<File>();
+				final Object[] selected = Dumpster.this.list.getSelectedValues();
+				for (Object o:selected)
+					if (o instanceof SharedFile)
+						files.add(((SharedFile)o).getFile());
+						
+				if (files.size() == 0)
+					return;
+						
+				Transferable t = new FileTransferable(files);
+				ds.startDrag(evt, DragSource.DefaultMoveDrop, t, new DragSourceAdapter() {
+					@Override
+					public void dragDropEnd(DragSourceDropEvent dsde) {
+						if( dsde.getDropAction() == DnDConstants.ACTION_MOVE )
+						{
+							// delete all selected from model
+							for (Object o:Dumpster.this.list.getSelectedValues())
+								Dumpster.this.filelist.removeElement(o);
+						}
+						// hide window after dragging
+						Dumpster.this.setVisible(false);
+					}
+				});
+			}
+		});
 	}
 	
 	private void setupTray()
@@ -210,8 +281,7 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 	}
 	
 	protected void addSharedFile(SharedFile shared) {
-		this.filelist.add(new ShareInfo(shared, count++));
-		this.filelist.revalidate();
+		this.filelist.add(this.filelist.size(), shared);
 	}
 
 	public static void main(String... args) {

@@ -9,6 +9,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Observable;
 
+import nl.thanod.dragnshare.DumpsterListCellRenderer.ColorScheme;
+
 /**
  * @author nilsdijk
  */
@@ -103,6 +105,14 @@ public class ReceivedSharedFile extends Observable implements SharedFile, Receiv
 	@Override
 	public void onError(File target, String filename, long filesize, IOException e) {
 		e.printStackTrace();
+	}
+
+	/* (non-Javadoc)
+	 * @see nl.thanod.dragnshare.SharedFile#getColorScheme()
+	 */
+	@Override
+	public ColorScheme getColorScheme() {
+		return ColorScheme.RECEIVED;
 	}
 
 }
