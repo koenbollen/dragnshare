@@ -6,16 +6,25 @@ package nl.thanod.dragnshare;
 import it.koen.dragnshare.net.MulticastShare;
 import it.koen.dragnshare.net.Receiver;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.AWTException;
+import java.awt.BorderLayout;
+import java.awt.Image;
+import java.awt.SystemTray;
+import java.awt.TrayIcon;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 
 import javax.imageio.ImageIO;
-import javax.swing.*;
-
-import nl.thanod.DebugUtil;
+import javax.swing.BoxLayout;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.UIManager;
+import javax.swing.WindowConstants;
 
 /**
  * @author nilsdijk
@@ -107,17 +116,8 @@ public class Dumpster extends JFrame implements MulticastShare.Listener {
 		final TrayIcon trayIcon = new TrayIcon(createImage("dragn.png"));
 		final SystemTray tray = SystemTray.getSystemTray();
 
-		trayIcon.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent paramActionEvent) {
-
-			}
-		});
-
-		trayIcon.addMouseMotionListener(DebugUtil.getPrintingImplementation(MouseMotionListener.class));
-
 		trayIcon.addMouseListener(new MouseAdapter() {
+			
 			@Override
 			public void mousePressed(MouseEvent paramMouseEvent) {
 				dump.setVisible(true);

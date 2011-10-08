@@ -8,16 +8,25 @@ import java.awt.Container;
 import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.datatransfer.Transferable;
-import java.awt.dnd.*;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DragGestureEvent;
+import java.awt.dnd.DragGestureListener;
+import java.awt.dnd.DragSource;
+import java.awt.dnd.DragSourceDragEvent;
+import java.awt.dnd.DragSourceDropEvent;
+import java.awt.dnd.DragSourceEvent;
+import java.awt.dnd.DragSourceListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Observable;
 import java.util.Observer;
 
-import javax.swing.*;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JProgressBar;
+import javax.swing.JRootPane;
 
 /**
  * @author nilsdijk
@@ -75,12 +84,12 @@ public class ShareInfo extends JPanel {
 	 */
 	private void initDragable() {
 		final DragSource ds = new DragSource();
-		ds.createDefaultDragGestureRecognizer(this, DnDConstants.ACTION_MOVE, new DragGestureListener() {
+		ds.createDefaultDragGestureRecognizer(this, DnDConstants.ACTION_COPY_OR_MOVE, new DragGestureListener() {
 
 			@Override
 			public void dragGestureRecognized(DragGestureEvent evt) {
 				Transferable t = new FileTransferable(Collections.singleton(shared.getFile()));
-				ds.startDrag(evt, DragSource.DefaultCopyDrop, t, new DragSourceListener() {
+				ds.startDrag(evt, DragSource.DefaultMoveDrop, t, new DragSourceListener() {
 					
 					@Override
 					public void dropActionChanged(DragSourceDragEvent dsde) {
@@ -108,11 +117,13 @@ public class ShareInfo extends JPanel {
 					
 					@Override
 					public void dragDropEnd(DragSourceDropEvent dsde) {
-						System.out.println("end!");
-						JRootPane p = ShareInfo.this.getRootPane();
-						Container c = ShareInfo.this.getParent();
-						c.remove(ShareInfo.this);
-						p.revalidate();
+						if( dsde.getDropAction() == DnDConstants.ACTION_MOVE )
+						{
+							JRootPane p = ShareInfo.this.getRootPane();
+							Container c = ShareInfo.this.getParent();
+							c.remove(ShareInfo.this);
+							p.revalidate();
+						}
 					}
 				});
 			}
