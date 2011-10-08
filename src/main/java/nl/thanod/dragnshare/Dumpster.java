@@ -6,7 +6,14 @@ package nl.thanod.dragnshare;
 import it.koen.dragnshare.net.MulticastShare;
 import it.koen.dragnshare.net.Receiver;
 
-import java.awt.*;
+import java.awt.AWTException;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Frame;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.SystemTray;
+import java.awt.TrayIcon;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
@@ -15,12 +22,18 @@ import java.io.IOException;
 import java.net.URL;
 
 import javax.imageio.ImageIO;
-import javax.swing.*;
+import javax.swing.BoxLayout;
+import javax.swing.JDialog;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.UIManager;
+import javax.swing.WindowConstants;
 
 /**
  * @author nilsdijk
  */
-public class Dumpster extends JFrame implements MulticastShare.Listener {
+public class Dumpster extends JDialog implements MulticastShare.Listener {
 	/**
 	 * 
 	 */
@@ -32,7 +45,12 @@ public class Dumpster extends JFrame implements MulticastShare.Listener {
 
 	private final JPanel filelist;
 
-	public Dumpster(final FileShare share) {
+	private TrayIcon trayIcon;
+	private BufferedImage defaultIcon;
+	private BufferedImage newIcon;
+
+	public Dumpster() {
+		super((Frame)null,"Drag'n Share");
 		this.sharer = new MulticastShare();
 		try {
 			this.sharer.connect();
@@ -42,6 +60,11 @@ public class Dumpster extends JFrame implements MulticastShare.Listener {
 			System.exit(-1);
 		}
 		this.sharer.start();
+		
+		this.setupTray();
+		
+		this.setModal(true);
+		this.setResizable(false);
 
 		this.filelist = new JPanel();
 		filelist.setLayout(new BoxLayout(filelist, BoxLayout.Y_AXIS));
@@ -50,8 +73,6 @@ public class Dumpster extends JFrame implements MulticastShare.Listener {
 			public void filesDropped(File[] files) {
 				for (final File file : files) {
 					sharer.share(file);
-					if (share != null)
-						share.share(file);
 					addSharedFile(new SharedFile() {
 						@Override
 						public File getFile() {
@@ -88,32 +109,34 @@ public class Dumpster extends JFrame implements MulticastShare.Listener {
 		setSize(400, 300);
 		setLocationRelativeTo(null);
 	}
-
-	public static void main(String... args) {
-
-		try {
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		} catch (Throwable ball) {
-			ball.printStackTrace();
-		}
-
-		final Dumpster dump = new Dumpster(new FileShare() {
-			@Override
-			public void share(File file) {
-				System.out.println("Share " + file);
-			}
-		});
-
+	
+	private void setupTray()
+	{
 		final SystemTray tray = SystemTray.getSystemTray();
-		final TrayIcon trayIcon = new TrayIcon(createImage("dragn.png", tray.getTrayIconSize()));
-		final TrayMenu menu = new TrayMenu(dump);
+		
+		Dimension size = tray.getTrayIconSize();
+		BufferedImage add = createImage("add.png", null);
+		this.defaultIcon = createImage("dragn.png", size);
+		this.newIcon = new BufferedImage(size.width, size.height, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D graphics = this.newIcon.createGraphics();
+		graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+		graphics.drawImage(this.defaultIcon, 0, 0, size.width, size.height, null);
+		graphics.drawImage(add,size.width-add.getWidth(), size.height-add.getHeight(), add.getWidth(), add.getHeight(), null);
+		graphics.dispose();
+		
+		this.trayIcon = new TrayIcon(this.defaultIcon);
+		this.trayIcon.setImageAutoSize(true);
+		final TrayMenu menu = new TrayMenu(this);
 		trayIcon.setPopupMenu(menu);
 		
 		trayIcon.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				if( e.getButton() == MouseEvent.BUTTON1 )
-					dump.setVisible(!dump.isVisible());
+				{
+					Dumpster.this.trayIcon.setImage(defaultIcon);
+					Dumpster.this.setVisible(!Dumpster.this.isVisible());
+				}
 			}
 		});
 
@@ -124,11 +147,22 @@ public class Dumpster extends JFrame implements MulticastShare.Listener {
 		}
 	}
 
+	public static void main(String... args) {
+
+		try {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		} catch (Throwable ball) {
+			ball.printStackTrace();
+		}
+
+		new Dumpster();
+	}
+
 	/**
 	 * @param string
 	 * @return
 	 */
-	private static Image createImage(String string, Dimension size) {
+	private static BufferedImage createImage(String string, Dimension size) {
 		try {
 			URL url = Dumpster.class.getClassLoader().getResource(string);
 			BufferedImage img = ImageIO.read(url);
@@ -156,6 +190,8 @@ public class Dumpster extends JFrame implements MulticastShare.Listener {
 	 */
 	@Override
 	public void onReceive(final Receiver receiver) {
+		if( !this.isVisible() )
+			this.trayIcon.setImage(newIcon);
 		addSharedFile(new ReceivedSharedFile(receiver));
 	}
 	

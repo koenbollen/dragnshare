@@ -184,11 +184,6 @@ public class Receiver extends Thread
 		return this.currentStatus;
 	}
 
-	public File getFile()
-	{
-		return this.target;
-	}
-
 	public boolean isCompleted()
 	{
 		return this.currentStatus == Status.COMPLETED;
