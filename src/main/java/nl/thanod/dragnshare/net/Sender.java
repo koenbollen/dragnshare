@@ -1,4 +1,4 @@
-package it.koen.dragnshare.net;
+package nl.thanod.dragnshare.net;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -13,13 +13,15 @@ public class Sender extends Thread
 
 	public static final int BUFFERSIZE = 4096;
 
+	private final MulticastShare sharer;
 	private final File file;
 	private final InetAddress addr;
 	private final int port;
 
-	public Sender(File file, InetAddress addr, int port)
+	public Sender(MulticastShare sharer, File file, InetAddress addr, int port)
 	{
 		this.setDaemon(true);
+		this.sharer = sharer;
 		this.file = file;
 		this.addr = addr;
 		this.port = port;
@@ -55,6 +57,7 @@ public class Sender extends Thread
 			e.printStackTrace();
 		} finally
 		{
+			this.sharer.fireSent(this);
 			try
 			{
 				if (s != null)
@@ -71,5 +74,15 @@ public class Sender extends Thread
 
 			}
 		}
+	}
+
+	public File getFile()
+	{
+		return file;
+	}
+
+	public int getPort()
+	{
+		return port;
 	}
 }

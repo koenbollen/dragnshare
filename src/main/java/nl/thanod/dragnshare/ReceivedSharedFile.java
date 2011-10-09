@@ -3,13 +3,13 @@
  */
 package nl.thanod.dragnshare;
 
-import it.koen.dragnshare.net.Receiver;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Observable;
 
 import nl.thanod.dragnshare.DumpsterListCellRenderer.ColorScheme;
+import nl.thanod.dragnshare.net.Receiver;
 
 /**
  * @author nilsdijk

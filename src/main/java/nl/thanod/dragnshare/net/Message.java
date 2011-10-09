@@ -1,4 +1,4 @@
-package it.koen.dragnshare.net;
+package nl.thanod.dragnshare.net;
 
 import java.io.File;
 import java.io.Serializable;

@@ -3,8 +3,6 @@
  */
 package nl.thanod.dragnshare;
 
-import it.koen.dragnshare.net.MulticastShare;
-import it.koen.dragnshare.net.Receiver;
 
 import java.awt.*;
 import java.awt.datatransfer.Transferable;
@@ -21,6 +19,9 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 
 import nl.thanod.dragnshare.DumpsterListCellRenderer.ColorScheme;
+import nl.thanod.dragnshare.net.MulticastShare;
+import nl.thanod.dragnshare.net.Receiver;
+import nl.thanod.dragnshare.net.Sender;
 import nl.thanod.util.Settings;
 
 /**
@@ -266,6 +267,10 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 			return null;
 		}
 	}
+	
+	protected void addSharedFile(SharedFile shared) {
+		this.filelist.add(this.filelist.size(), shared);
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -279,9 +284,17 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 			this.trayIcon.setImage(newIcon);
 		addSharedFile(new ReceivedSharedFile(receiver));
 	}
-	
-	protected void addSharedFile(SharedFile shared) {
-		this.filelist.add(this.filelist.size(), shared);
+
+	@Override
+	public void onSending(Sender sender)
+	{
+		//System.out.println("onSending");
+	}
+
+	@Override
+	public void onSent(Sender sender)
+	{
+		//System.out.println("onSent");
 	}
 
 	public static void main(String... args) {

@@ -1,4 +1,4 @@
-package it.koen.dragnshare.net;
+package nl.thanod.dragnshare.net;
 
 import java.awt.Desktop;
 import java.io.File;
@@ -6,12 +6,26 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 public class MulticastShare extends Thread
 {
 	public interface Listener {
 		void onReceive(Receiver receiver);
+		void onSending(Sender sender);
+		void onSent(Sender sender);
+	}
+	public static class Adapter implements Listener {
+		public void onReceive(Receiver receiver) {}
+		public void onSending(Sender sender) {}
+		public void onSent(Sender sender) {}
 	}
 
 	public static final int MULTICASTPORT = 5432;
@@ -86,7 +100,12 @@ public class MulticastShare extends Thread
 			case ACCEPT:
 				if (this.files.containsKey(m.getID()))
 				{
-					new Sender(this.files.get(m.getID()), packet.getAddress(), m.getPort()).start();
+					Sender s = new Sender(this, this.files.get(m.getID()), packet.getAddress(), m.getPort());
+					s.start();
+
+					List<Listener> listeners = new ArrayList<MulticastShare.Listener>(this.listeners);
+					for (Listener listener:listeners)
+						listener.onSending(s);
 				}
 				break;
 			case OFFER:
@@ -132,7 +151,6 @@ public class MulticastShare extends Thread
 		} catch (IOException e)
 		{
 			e.printStackTrace();
-			// TODO: Error handling.
 		}
 
 	}
@@ -151,7 +169,7 @@ public class MulticastShare extends Thread
 	{
 		System.out.println("MulticastShare test (files: " + args.length+")");
 		MulticastShare dragnshare = new MulticastShare();
-		dragnshare.addMulticastListener(new Listener() {
+		dragnshare.addMulticastListener(new Adapter() {
 			
 			@Override
 			public void onReceive(Receiver receiver) {
@@ -175,6 +193,13 @@ public class MulticastShare extends Thread
 		dragnshare.start();
 		for (String s : args)
 			dragnshare.share(new File(s));
+	}
+
+	protected void fireSent(Sender s)
+	{
+		List<Listener> listeners = new ArrayList<MulticastShare.Listener>(this.listeners);
+		for (Listener listener:listeners)
+			listener.onSent(s);
 	}
 
 }
