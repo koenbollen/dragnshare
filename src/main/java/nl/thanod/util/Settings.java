@@ -23,6 +23,7 @@ public class Settings extends Properties
 	{
 		void preStore( Settings instance );
 		void postLoad( Settings instance );
+		void onSettingChanged( String key, String old, String value );
 	}
 	public static class Adapter implements Listener
 	{
@@ -31,8 +32,11 @@ public class Settings extends Properties
 
 		@Override
 		public void postLoad(Settings instance){}
+		
+		@Override
+		public void onSettingChanged( String key, String old, String value ){}
 	}
-	
+
 	private List<Listener> listeners;
 	
 	private Settings()
@@ -50,7 +54,8 @@ public class Settings extends Properties
 	
 	public void store()
 	{
-		for( Listener l : this.listeners )
+		List<Listener> listeners = new ArrayList<Settings.Listener>(this.listeners);
+		for( Listener l : listeners )
 			if( l != null )
 				l.preStore(this);
 		
@@ -95,7 +100,8 @@ public class Settings extends Properties
 			} catch( Exception e ){}
 		}
 		
-		for( Listener l : this.listeners )
+		List<Listener> listeners = new ArrayList<Settings.Listener>(this.listeners);
+		for( Listener l : listeners )
 			if( l != null )
 				l.postLoad(instance);
 	}
@@ -110,7 +116,24 @@ public class Settings extends Properties
 		return this.listeners.remove(listener);
 	}
 	
+	@Override
+	public synchronized Object setProperty(String key, String value)
+	{
+		String old = this.getProperty(key);
+		if( old == null || !old.equals(value) )
+			fireSettingChanged(key, old, value);
+		return super.setProperty(key, value);
+	}
 	
+	
+	private void fireSettingChanged(String key, String old, String value)
+	{
+		List<Listener> listeners = new ArrayList<Settings.Listener>(this.listeners);
+		for( Listener l : listeners )
+			if( l != null )
+				l.onSettingChanged(key, old, value);
+	}
+
 	public Point getLocation()
 	{
 		try
@@ -135,4 +158,14 @@ public class Settings extends Properties
 		String userdir = System.getProperty("user.home", "");
 		return new File( userdir, ".dragnshare.xml" );
 	}
+
+	public boolean getBool(String key)
+	{
+		return Boolean.parseBoolean(this.getProperty(key));
+	}
+	public void setBool(String key, boolean value)
+	{
+		this.setProperty(key, Boolean.toString(value));
+	}
+	
 }

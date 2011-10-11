@@ -59,7 +59,7 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 		
 		this.setupTray();
 		
-		this.setModal(true);
+		//this.setModal(true);
 		this.setResizable(false);
 
 		this.filelist = new ObservingDefaultListModel();
@@ -177,8 +177,9 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 							for (Object o:Dumpster.this.list.getSelectedValues())
 								Dumpster.this.filelist.removeElement(o);
 						}
-						// hide window after dragging
-						Dumpster.this.setVisible(false);
+						// hide window after dragging, if option is set:
+						if( Settings.instance.getBool("hideDropZone") )
+							Dumpster.this.setVisible(false);
 					}
 				});
 			}

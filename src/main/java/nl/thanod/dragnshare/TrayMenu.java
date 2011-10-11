@@ -37,7 +37,15 @@ public class TrayMenu extends PopupMenu
 		});
 		this.add(i);
 		this.addSeparator();
-		this.add(new MenuItem("Settings"));
+		i = new MenuItem("Settings");
+		i.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0)
+			{
+				new SettingsPane().setVisible(true);
+			}
+		});
+		this.add(i);
 		this.addSeparator();
 		i = new MenuItem("Exit");
 		i.addActionListener(new ActionListener() {
