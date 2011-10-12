@@ -1,11 +1,13 @@
 package nl.thanod.dragnshare.net;
 
-import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
 import java.net.DatagramPacket;
+import java.net.Inet4Address;
 import java.net.InetAddress;
+import java.net.InterfaceAddress;
 import java.net.MulticastSocket;
+import java.net.NetworkInterface;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -14,6 +16,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+
+import nl.thanod.util.Settings;
+
+import org.apache.commons.net.util.SubnetUtils;
 
 public class MulticastShare extends Thread
 {
@@ -91,8 +97,10 @@ public class MulticastShare extends Thread
 			{
 				this.multisocket.receive(packet);
 				m = Message.parse(new String(packet.getData(), packet.getOffset(), packet.getLength()));
+				System.out.println(m);
 			} catch (Exception e)
 			{
+				e.printStackTrace();
 				continue;
 			}
 			switch (m.getType())
@@ -123,7 +131,7 @@ public class MulticastShare extends Thread
 							
 					int port = r.getLocalPort();
 					r.start();
-					this.send(new Message(m.getID(), port));
+					this.send(new Message(m.getID(), port), packet.getAddress());
 					
 				} catch (IOException e)
 				{
@@ -136,8 +144,44 @@ public class MulticastShare extends Thread
 
 	public void send(Message m) throws IOException
 	{
+		if( Settings.instance.getBool("bruteForceDiscover" ))
+		{
+			// TODO: Thread this? Or thread at a higher level when share( is called?
+			byte[] bytes = m.toString().getBytes();
+			DatagramPacket packet = new DatagramPacket(bytes, bytes.length, null, MULTICASTPORT);
+			
+			for (NetworkInterface dev : Collections.list(NetworkInterface.getNetworkInterfaces()) ) {
+				if(dev.isLoopback() || !dev.isUp())
+					continue;
+				
+				for( InterfaceAddress addr : dev.getInterfaceAddresses() )
+				{
+					if( addr.getNetworkPrefixLength() != 24 )
+						continue;
+					if( !(addr.getAddress() instanceof Inet4Address) )
+						continue;
+					SubnetUtils.SubnetInfo info = new SubnetUtils(addr.getAddress().getHostAddress()+"/"+addr.getNetworkPrefixLength()).getInfo();
+					for( String i : info.getAllAddresses() )
+					{
+						if( addr.getAddress().getHostAddress().equals(i) )
+							continue;
+						packet.setAddress(Inet4Address.getByName(i));
+						this.multisocket.send(packet);
+					}
+				}
+			}
+		}
+		else
+		{
+			byte[] bytes = m.toString().getBytes();
+			DatagramPacket packet = new DatagramPacket(bytes, bytes.length, this.group, MULTICASTPORT);
+			this.multisocket.send(packet);
+		}
+	}
+	public void send(Message m, InetAddress addr) throws IOException
+	{
 		byte[] bytes = m.toString().getBytes();
-		DatagramPacket packet = new DatagramPacket(bytes, bytes.length, this.group, MULTICASTPORT);
+		DatagramPacket packet = new DatagramPacket(bytes, bytes.length, addr, MULTICASTPORT);
 		this.multisocket.send(packet);
 	}
 
@@ -163,36 +207,6 @@ public class MulticastShare extends Thread
 	
 	public boolean removeMulticastListener(Listener listener){
 		return this.listeners.remove(listener);
-	}
-
-	public static void main(String[] args) throws Exception
-	{
-		System.out.println("MulticastShare test (files: " + args.length+")");
-		MulticastShare dragnshare = new MulticastShare();
-		dragnshare.addMulticastListener(new Adapter() {
-			
-			@Override
-			public void onReceive(Receiver receiver) {
-				receiver.addCompletionListener(new Receiver.Adapter() {
-					@Override
-					public void onCompleted(File result, String filename, long filesize) {
-						System.out.println("received " + result.getName());
-						if (Desktop.isDesktopSupported()){
-							try {
-								Desktop.getDesktop().open(result);
-							} catch (IOException ball) {
-							}
-						}
-					}
-				});
-			}
-		});
-		
-		dragnshare.connect();
-		dragnshare.setDaemon(false); // Should be true if use irl.
-		dragnshare.start();
-		for (String s : args)
-			dragnshare.share(new File(s));
 	}
 
 	protected void fireSent(Sender s)

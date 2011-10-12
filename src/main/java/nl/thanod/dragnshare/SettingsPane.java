@@ -1,7 +1,6 @@
 package nl.thanod.dragnshare;
 
 import java.awt.Dimension;
-import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashMap;
@@ -12,7 +11,6 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
-import javax.swing.JTextArea;
 import javax.swing.UIManager;
 
 import nl.thanod.util.Settings;
@@ -65,8 +63,7 @@ public class SettingsPane extends JFrame
 	{
 		JPanel p = new JPanel();
 
-		final JCheckBox bruteForceDiscover = new JCheckBox("Use a blunt technique to boardcast files shared.");
-		bruteForceDiscover.setEnabled(false); // TODO: Enable when implemented.
+		final JCheckBox bruteForceDiscover = new JCheckBox("Use a blunt technique to boardcast files shared across the network.");
 		bruteForceDiscover.setSelected(Settings.instance.getBool("bruteForceDiscover"));
 		bruteForceDiscover.addActionListener(new ActionListener() {
 			@Override
