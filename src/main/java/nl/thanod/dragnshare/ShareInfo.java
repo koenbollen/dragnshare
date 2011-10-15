@@ -10,6 +10,8 @@ import java.awt.FlowLayout;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -43,11 +45,15 @@ public class ShareInfo extends JPanel implements ListViewable {
 	private boolean selected;
 
 	private JLabel close;
+	
+	private List<JComponent> coloredComponents = new ArrayList<JComponent>();
 
 	private Monitor monitor;
 
 	public ShareInfo(SharedFile sf) {
 		super(new BorderLayout());
+		this.coloredComponents.add(this);
+		
 		setBorder(BorderFactory.createEmptyBorder(2, 2, 0, 2));
 		this.sf = sf;
 		this.setPreferredSize(new Dimension(0, 50));
@@ -76,7 +82,8 @@ public class ShareInfo extends JPanel implements ListViewable {
 
 		JPanel buttons = new JPanel(new FlowLayout(FlowLayout.LEADING, 0, 0));
 		buttons.add(this.close = new JLabel(getIcon("cancel.png")));
-		this.close.setOpaque(false);
+		resizeLabel(this.close);
+		this.coloredComponents.add(this.close);
 		this.close.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -90,7 +97,8 @@ public class ShareInfo extends JPanel implements ListViewable {
 		if (sf.canSave()) {
 			final JLabel save;
 			buttons.add(save = new JLabel(getIcon("disk.png")));
-			save.setOpaque(false);
+			resizeLabel(save);
+			this.coloredComponents.add(save);
 			save.addMouseListener(new MouseAdapter() {
 				/*
 				 * (non-Javadoc)
@@ -115,6 +123,15 @@ public class ShareInfo extends JPanel implements ListViewable {
 			});
 		}
 		this.add(buttons, BorderLayout.EAST);
+		
+		updateView();
+	}
+
+	/**
+	 * @param close2
+	 */
+	private static void resizeLabel(JLabel l) {
+		l.setPreferredSize(new Dimension(l.getIcon().getIconWidth(), l.getIcon().getIconHeight()));
 	}
 
 	/**
@@ -190,7 +207,11 @@ public class ShareInfo extends JPanel implements ListViewable {
 		ColorScheme cs = this.sf.getColorScheme();
 		if (selected)
 			cs = ColorScheme.SELECTED;
-		setBackground(cs.getColor(this.index));
+		
+		for (JComponent c:this.coloredComponents){
+			c.setOpaque(true);
+			c.setBackground(cs.getColor(index));
+		}
 		repaint();
 	}
 
