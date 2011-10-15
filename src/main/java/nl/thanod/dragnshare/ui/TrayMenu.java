@@ -7,13 +7,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.URI;
 
-import nl.thanod.dragnshare.Dumpster;
+import nl.thanod.dragnshare.DropZone;
 
 public class TrayMenu extends PopupMenu
 {
 	private static final long serialVersionUID = -5944495892788958118L;
 	
-	public TrayMenu( Dumpster parent )
+	public TrayMenu( DropZone parent )
 	{
 		MenuItem i;
 		

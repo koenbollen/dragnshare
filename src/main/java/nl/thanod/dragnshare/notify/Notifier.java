@@ -6,7 +6,7 @@ package nl.thanod.dragnshare.notify;
 import java.util.ArrayList;
 import java.util.List;
 
-import nl.thanod.dragnshare.Dumpster;
+import nl.thanod.dragnshare.DropZone;
 import nl.thanod.util.Settings;
 
 /**
@@ -51,7 +51,7 @@ public interface Notifier {
 
 	public static class Factory
 	{
-		public static Dumpster dropZone = null;
+		public static DropZone dropZone = null;
 		private static List<Notifier> notifiers;
 		static
 		{

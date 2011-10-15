@@ -21,11 +21,11 @@ import nl.thanod.util.OS;
  */
 public class Clipper
 {
-	private final Dumpster dropzone;
+	private final DropZone dropzone;
 	private final Clipboard clipboard;
 	private final List<FileDrop.Listener> listeners;
 
-	public Clipper(Dumpster dropzone, FileDrop.Listener listener)
+	public Clipper(DropZone dropzone, FileDrop.Listener listener)
 	{
 		this.dropzone = dropzone;
 		this.listeners = new ArrayList<FileDrop.Listener>();

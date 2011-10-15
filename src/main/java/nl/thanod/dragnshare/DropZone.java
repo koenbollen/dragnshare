@@ -30,7 +30,7 @@ import nl.thanod.util.Settings;
  * @author nilsdijk
  * @author Koen Bollen <meneer@koenbollen>
  */
-public class Dumpster extends JDialog implements MulticastShare.Listener {
+public class DropZone extends JDialog implements MulticastShare.Listener {
 
 	private static final long serialVersionUID = 7192301082111534982L;
 
@@ -44,7 +44,7 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 
 	private JButton clearall;
 
-	public Dumpster() {
+	public DropZone() {
 		super((Frame) null, "Drag'n Share");
 
 		Notifier.Factory.dropZone = this;
@@ -73,7 +73,7 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 			public void mouseClicked(MouseEvent e) {
 				if (e.getClickCount() == 2){
 					if (Desktop.isDesktopSupported()){
-						for (ShareInfo o:Dumpster.this.list.getSelector().getSelected()){
+						for (ShareInfo o:DropZone.this.list.getSelector().getSelected()){
 							if (!o.getSharedFile().isReady())
 								continue;
 
@@ -97,7 +97,7 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 			@Override
 			public void filesDropped(File[] files) {
 				for (final File file : files) {
-					Dumpster.this.sharer.share(file);
+					DropZone.this.sharer.share(file);
 					addSharedFile(new SharedFile() {
 						@Override
 						public File getFile() {
@@ -155,7 +155,7 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 		this.clearall.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent paramActionEvent) {
-				List<ShareInfo> l = Dumpster.this.list.getModel().getElements();
+				List<ShareInfo> l = DropZone.this.list.getModel().getElements();
 				for (ShareInfo si : l)
 					si.removeFromList();
 			}
@@ -170,14 +170,14 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowDeactivated(WindowEvent e) {
-				Settings.instance.setLocation(Dumpster.this.getLocation());
+				Settings.instance.setLocation(DropZone.this.getLocation());
 			}
 		});
 
 		Settings.instance.addListener(new Settings.Adapter() {
 			@Override
 			public void preStore(Settings instance) {
-				instance.setLocation(Dumpster.this.getLocation());
+				instance.setLocation(DropZone.this.getLocation());
 			}
 		});
 
@@ -197,7 +197,7 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 			public void dragGestureRecognized(DragGestureEvent evt) {
 				//get files
 				List<File> files = new ArrayList<File>();
-				List<ShareInfo> selected = Dumpster.this.list.getSelector().getSelected();
+				List<ShareInfo> selected = DropZone.this.list.getSelector().getSelected();
 				final List<ShareInfo> dragged = new ArrayList<ShareInfo>();
 				for (ShareInfo o : selected) {
 					if (o.getSharedFile().isReady()) {
@@ -215,11 +215,11 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 					public void dragDropEnd(DragSourceDropEvent dsde) {
 						if (dsde.getDropAction() == DnDConstants.ACTION_MOVE) {
 							// delete all selected from model
-							Dumpster.this.list.getModel().removeAll(dragged);
+							DropZone.this.list.getModel().removeAll(dragged);
 						}
 						// hide window after dragging, if option is set:
 						if (Settings.instance.getBool("hideDropZone"))
-							Dumpster.this.setVisible(false);
+							DropZone.this.setVisible(false);
 					}
 				});
 			}
@@ -236,7 +236,7 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 
 			@Override
 			public void windowGainedFocus(WindowEvent e) {
-				Dumpster.this.tray.setDefaultIcon();
+				DropZone.this.tray.setDefaultIcon();
 			}
 		});
 
@@ -244,13 +244,13 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				if (e.getButton() == MouseEvent.BUTTON1) {
-					if (!Dumpster.this.isVisible()) {
-						Dimension size = Dumpster.this.getSize();
+					if (!DropZone.this.isVisible()) {
+						Dimension size = DropZone.this.getSize();
 						Point p = Settings.instance.getLocation();
 						if (p != null && ScreenInfo.intersects(new Rectangle(p, size)))
-							Dumpster.this.setLocation(p);
+							DropZone.this.setLocation(p);
 					}
-					Dumpster.this.setVisible(!Dumpster.this.isVisible());
+					DropZone.this.setVisible(!DropZone.this.isVisible());
 				}
 			}
 		});
@@ -262,7 +262,7 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 		info.setMonitor(new ShareInfo.Monitor() {
 			@Override
 			public void onRemove(ShareInfo info) {
-				Dumpster.this.list.getModel().remove(info);
+				DropZone.this.list.getModel().remove(info);
 				info.getSharedFile().remove();
 			}
 		});
@@ -299,7 +299,7 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 			ball.printStackTrace();
 		}
 
-		new Dumpster();
+		new DropZone();
 	}
 
 	@Override
@@ -315,7 +315,7 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 					Thread.sleep(5000);
 				} catch (InterruptedException e) {
 				}
-				Dumpster.this.sharer.accept(idd);
+				DropZone.this.sharer.accept(idd);
 			}
 		});
 		t.setDaemon(true);
