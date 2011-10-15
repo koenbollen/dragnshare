@@ -171,5 +171,18 @@ public class Settings extends Properties
 	{
 		this.setProperty(key, Boolean.toString(value));
 	}
+
+	public int getInt(String key, int def)
+	{
+		String value = this.getProperty(key);
+		if( value == null )
+			return def;
+		return Integer.parseInt(value);
+	}
+
+	public void setInt(String key, int value)
+	{
+		this.setProperty(key, Integer.toString(value));
+	}
 	
 }

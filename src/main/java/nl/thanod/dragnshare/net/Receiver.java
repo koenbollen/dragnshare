@@ -55,16 +55,18 @@ public class Receiver extends Thread
 		STARTING, LISTENING, TRANSFERRING, COMPLETED, FAILED;
 	}
 
-	private ServerSocket s;
+	private final UUID messageid;
+	private final String filename;
+	private final long filesize;
 	private File target;
-	private String filename;
-	private long filesize;
+	private ServerSocket s;
 	private volatile Status currentStatus;
 	private final List<Listener> listeners;
 
-	public Receiver(UUID id, String filename, long filesize, File target)
+	public Receiver(UUID messageid, String filename, long filesize, File target)
 	{
 		this.setDaemon(true);
+		this.messageid = messageid;
 		this.target = target;
 		this.filename = filename;
 		this.filesize = filesize;
@@ -189,6 +191,11 @@ public class Receiver extends Thread
 		return this.currentStatus == Status.COMPLETED;
 	}
 	
+	public UUID getMessageID()
+	{
+		return this.messageid;
+	}
+
 	public File getTarget() {
 		return this.target;
 	}
