@@ -57,6 +57,7 @@ public interface Notifier {
 		{
 			Factory.notifiers = new ArrayList<Notifier>();
 			Factory.notifiers.add(new GrowlNotifier());
+			Factory.notifiers.add(new LibNotifyNotifier());
 			Factory.notifiers.add(new JavaNotifier());
 		}
 		
@@ -80,6 +81,7 @@ public interface Notifier {
 			if( notifier != null )
 				notifier.notify(type, title, message);
 		}
+		
 	}
 	
 	public boolean canNotify();
