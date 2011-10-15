@@ -10,8 +10,8 @@ import java.awt.Color;
  */
 public enum ColorScheme {
 	OFFERED(fromHex("#FFF0D0"), fromHex("#FFE0C0")),
-	RECEIVED(fromHex("#ddFFdd"), fromHex("#eeFFee")),
-	DEFAULT(fromHex("#dFdFFF"), fromHex("#eFeFFF")),
+	RECEIVED(fromHex("#dFdFFF"), fromHex("#eFeFFF")),
+	DEFAULT(fromHex("#ddFFdd"), fromHex("#e5FFe5")),
 	ERROR(fromHex("#FFd0d0"), fromHex("#FFe0e0")),
 	SELECTED(fromHex("#aaaaFF"), fromHex("#9999ff"));
 

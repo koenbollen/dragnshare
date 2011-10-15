@@ -99,7 +99,8 @@ public class Receiver extends Thread
 		OutputStream out = null;
 		try
 		{
-			int n = 0, count = 0;
+			int n = 0;
+			long count = 0;
 			byte[] buffer = new byte[BUFFERSIZE + 1];
 			client = this.s.accept();
 			InputStream in = client.getInputStream();

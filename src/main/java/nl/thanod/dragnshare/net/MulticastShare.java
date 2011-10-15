@@ -117,7 +117,7 @@ public class MulticastShare extends Thread
 			{
 				this.multisocket.receive(packet);
 				m = Message.parse(new String(packet.getData(), packet.getOffset(), packet.getLength()));
-				System.out.println(m);
+				//System.out.println(m);
 			} catch (Exception e)
 			{
 				e.printStackTrace();

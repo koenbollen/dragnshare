@@ -65,8 +65,8 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 		//this.setModal(true);
 		this.setResizable(false);
 		
-		list = new InteractiveList<ShareInfo>();
-		list.addMouseListener(new MouseAdapter() {
+		this.list = new InteractiveList<ShareInfo>();
+		this.list.addMouseListener(new MouseAdapter() {
 			/* (non-Javadoc)
 			 * @see java.awt.event.MouseAdapter#mouseClicked(java.awt.event.MouseEvent)
 			 */
@@ -74,9 +74,10 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 			public void mouseClicked(MouseEvent e) {
 				if (e.getClickCount() == 2){
 					if (Desktop.isDesktopSupported()){
-						for (ShareInfo o:list.getSelector().getSelected()){
+						for (ShareInfo o:Dumpster.this.list.getSelector().getSelected()){
 							if (!o.getSharedFile().isReady())
 								continue;
+
 							try {
 								Desktop.getDesktop().open(o.getSharedFile().getFile());
 							} catch (IOException ball) {
@@ -89,11 +90,11 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 		});
 		
 		JLabel drop;
-		list.setDrop(drop = new JLabel("drop here"));
+		this.list.setDrop(drop = new JLabel("drop here"));
 		drop.setHorizontalAlignment(SwingConstants.CENTER);
 		drop.setForeground(Color.LIGHT_GRAY);
 		
-		new FileDrop(this, new FileDrop.Listener() {
+		FileDrop.Listener dropper = new FileDrop.Listener() {
 			@Override
 			public void filesDropped(File[] files) {
 				for (final File file : files) {
@@ -132,7 +133,9 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 				}
 
 			}
-		});
+		};
+		new FileDrop(this, dropper);
+		new Clipper(this, dropper);
 
 		this.sharer.addMulticastListener(this);
 
