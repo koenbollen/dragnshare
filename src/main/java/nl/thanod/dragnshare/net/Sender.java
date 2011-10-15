@@ -38,7 +38,7 @@ public class Sender extends Thread
 			int n;
 			byte[] buffer = new byte[BUFFERSIZE];
 
-			s = new Socket(addr, port);
+			s = new Socket(this.addr, this.port);
 
 			in = new FileInputStream(this.file);
 			OutputStream out = s.getOutputStream();
@@ -78,11 +78,11 @@ public class Sender extends Thread
 
 	public File getFile()
 	{
-		return file;
+		return this.file;
 	}
 
 	public int getPort()
 	{
-		return port;
+		return this.port;
 	}
 }

@@ -13,6 +13,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
+/**
+ * @author Koen Bollen <meneer@koenbollen>
+ */
 public class Settings extends Properties
 {
 	private static final long serialVersionUID = -9049014928487362558L;
@@ -153,7 +156,7 @@ public class Settings extends Properties
 		this.setProperty("location_y", Integer.toString(p.y));
 	}
 	
-	private File findFile()
+	private static File findFile()
 	{
 		String userdir = System.getProperty("user.home", "");
 		return new File( userdir, ".dragnshare.xml" );

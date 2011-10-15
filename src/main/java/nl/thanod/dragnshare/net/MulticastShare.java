@@ -29,8 +29,11 @@ public class MulticastShare extends Thread
 		void onSent(Sender sender);
 	}
 	public static class Adapter implements Listener {
+		@Override
 		public void onReceive(Receiver receiver) {}
+		@Override
 		public void onSending(Sender sender) {}
+		@Override
 		public void onSent(Sender sender) {}
 	}
 
@@ -45,7 +48,7 @@ public class MulticastShare extends Thread
 	
 	private final List<Listener> listeners;
 	
-	private final Set<File> filesCreated;
+	protected final Set<File> filesCreated;
 
 	public MulticastShare()
 	{
@@ -165,7 +168,7 @@ public class MulticastShare extends Thread
 					{
 						if( addr.getAddress().getHostAddress().equals(i) )
 							continue;
-						packet.setAddress(Inet4Address.getByName(i));
+						packet.setAddress(InetAddress.getByName(i));
 						this.multisocket.send(packet);
 					}
 				}

@@ -58,7 +58,7 @@ public class Message implements Serializable
 		StringBuilder sb = new StringBuilder();
 		sb.append(this.type.ordinal());
 		sb.append(":");
-		sb.append(id);
+		sb.append(this.id);
 		sb.append(":");
 		if (this.type == MessageType.OFFER)
 		{
@@ -77,40 +77,40 @@ public class Message implements Serializable
 		String[] pieces = raw.split(":");
 		MessageType t = MessageType.values()[Integer.parseInt(pieces[0])];
 		if (t == MessageType.OFFER)
-			return new Message(Integer.parseInt(pieces[2]), pieces[3], UUID.fromString(pieces[1]));
+			return new Message(Long.parseLong(pieces[2]), pieces[3], UUID.fromString(pieces[1]));
 		else
 			return new Message(UUID.fromString(pieces[1]), Integer.parseInt(pieces[2]));
 	}
 
 	public MessageType getType()
 	{
-		return type;
+		return this.type;
 	}
 
 	public UUID getID()
 	{
-		return id;
+		return this.id;
 	}
 
 	public int getPort()
 	{
 		if (this.type != MessageType.ACCEPT)
 			throw new RuntimeException("Not a ACCEPT message.");
-		return port;
+		return this.port;
 	}
 
 	public String getFilename()
 	{
 		if (this.type != MessageType.OFFER)
 			throw new RuntimeException("Not a OFFER message.");
-		return filename;
+		return this.filename;
 	}
 
 	public long getFilesize()
 	{
 		if (this.type != MessageType.OFFER)
 			throw new RuntimeException("Not a OFFER message.");
-		return filesize;
+		return this.filesize;
 	}
 
 }

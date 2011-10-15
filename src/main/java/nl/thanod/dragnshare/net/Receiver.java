@@ -76,21 +76,21 @@ public class Receiver extends Thread
 
 	public void connect() throws IOException
 	{
-		if (target == null)
+		if (this.target == null)
 		{
 			File dir = File.createTempFile("dragnshare", "");
 			dir.delete();
 			dir.mkdirs();
-			target = new File(dir, this.filename);
-			target.createNewFile();
+			this.target = new File(dir, this.filename);
+			this.target.createNewFile();
 		}
-		s = new ServerSocket(0, 1);
+		this.s = new ServerSocket(0, 1);
 	}
 
 	@Override
 	public void run()
 	{
-		if (s == null)
+		if (this.s == null)
 			throw new RuntimeException("connect() before start()ing thread.");
 		this.currentStatus = Status.LISTENING;
 		Socket client = null;
@@ -99,15 +99,15 @@ public class Receiver extends Thread
 		{
 			int n = 0, count = 0;
 			byte[] buffer = new byte[BUFFERSIZE + 1];
-			client = s.accept();
+			client = this.s.accept();
 			InputStream in = client.getInputStream();
 			out = new FileOutputStream(this.target);
 
 			List<Listener> listeners = new ArrayList<Receiver.Listener>(this.listeners);
 			for (Listener listener:listeners)
-				listener.onStart(this.target,filename, this.filesize);
+				listener.onStart(this.target, this.filename, this.filesize);
 			
-			currentStatus = Status.TRANSFERRING;
+			this.currentStatus = Status.TRANSFERRING;
 			do
 			{
 				n = in.read(buffer, 0, BUFFERSIZE);
@@ -119,7 +119,7 @@ public class Receiver extends Thread
 					// notify listeners of received content
 					listeners = new ArrayList<Receiver.Listener>(this.listeners);
 					for (Listener listener:listeners)
-						listener.onProgress(this.target,filename, this.filesize, count);
+						listener.onProgress(this.target, this.filename, this.filesize, count);
 				}
 			} while (n > 0);
 
@@ -130,7 +130,7 @@ public class Receiver extends Thread
 
 			listeners = new ArrayList<Receiver.Listener>(this.listeners);
 			for (Listener listener:listeners)
-				listener.onCompleted(target, filename, this.filesize);
+				listener.onCompleted(this.target, this.filename, this.filesize);
 
 		} catch (IOException e)
 		{
@@ -138,15 +138,15 @@ public class Receiver extends Thread
 			
 			List<Listener> listeners = new ArrayList<Receiver.Listener>(this.listeners);
 			for (Listener listener:listeners)
-				listener.onError(target, filename, this.filesize, e);
+				listener.onError(this.target, this.filename, this.filesize, e);
 					
 			e.printStackTrace();
 		} finally
 		{
 			try
 			{
-				if (s != null)
-					s.close();
+				if (this.s != null)
+					this.s.close();
 			} catch (IOException e)
 			{
 			}
@@ -174,9 +174,9 @@ public class Receiver extends Thread
 
 	public int getLocalPort()
 	{
-		if (s == null)
+		if (this.s == null)
 			throw new RuntimeException("connect() before getting port.");
-		return s.getLocalPort();
+		return this.s.getLocalPort();
 	}
 
 	public Status getCurrentStatus()
@@ -190,14 +190,14 @@ public class Receiver extends Thread
 	}
 	
 	public File getTarget() {
-		return target;
+		return this.target;
 	}
 
 	public String getFilename() {
-		return filename;
+		return this.filename;
 	}
 
 	public long getFilesize() {
-		return filesize;
+		return this.filesize;
 	}
 }

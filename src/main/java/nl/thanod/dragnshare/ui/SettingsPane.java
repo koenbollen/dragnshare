@@ -1,4 +1,4 @@
-package nl.thanod.dragnshare;
+package nl.thanod.dragnshare.ui;
 
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;

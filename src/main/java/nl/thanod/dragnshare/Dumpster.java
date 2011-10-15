@@ -4,28 +4,29 @@
 package nl.thanod.dragnshare;
 
 
-import java.awt.*;
+import java.awt.Desktop;
+import java.awt.Frame;
+import java.awt.Point;
 import java.awt.datatransfer.Transferable;
 import java.awt.dnd.*;
 import java.awt.event.*;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 
 import nl.thanod.dragnshare.DumpsterListCellRenderer.ColorScheme;
 import nl.thanod.dragnshare.net.MulticastShare;
 import nl.thanod.dragnshare.net.Receiver;
 import nl.thanod.dragnshare.net.Sender;
+import nl.thanod.dragnshare.ui.Tray;
 import nl.thanod.util.Settings;
 
 /**
  * @author nilsdijk
+ * @author Koen Bollen <meneer@koenbollen>
  */
 public class Dumpster extends JDialog implements MulticastShare.Listener {
 	/**
@@ -41,9 +42,7 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 
 	protected final JList list;
 
-	protected TrayIcon trayIcon;
-	protected BufferedImage defaultIcon;
-	protected BufferedImage newIcon;
+	protected Tray tray;
 
 	public Dumpster() {
 		super((Frame)null,"Drag'n Share");
@@ -64,8 +63,8 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 
 		this.filelist = new ObservingDefaultListModel();
 		
-		list = new JList(this.filelist);
-		list.addMouseListener(new MouseAdapter() {
+		this.list = new JList(this.filelist);
+		this.list.addMouseListener(new MouseAdapter() {
 			/* (non-Javadoc)
 			 * @see java.awt.event.MouseAdapter#mouseClicked(java.awt.event.MouseEvent)
 			 */
@@ -73,7 +72,7 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 			public void mouseClicked(MouseEvent e) {
 				if (e.getClickCount() == 2){
 					if (Desktop.isDesktopSupported()){
-						for (Object o:list.getSelectedValues()){
+						for (Object o: Dumpster.this.list.getSelectedValues()){
 							if (o instanceof SharedFile){
 								try {
 									Desktop.getDesktop().open(((SharedFile)o).getFile());
@@ -87,14 +86,14 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 			}
 		});
 		
-		list.setCellRenderer(new DumpsterListCellRenderer());
-		list.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		this.list.setCellRenderer(new DumpsterListCellRenderer());
+		this.list.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		
 		new FileDrop(this, new FileDrop.Listener() {
 			@Override
 			public void filesDropped(File[] files) {
 				for (final File file : files) {
-					sharer.share(file);
+					Dumpster.this.sharer.share(file);
 					addSharedFile(new SharedFile() {
 						@Override
 						public File getFile() {
@@ -123,7 +122,7 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 
 		this.sharer.addMulticastListener(this);
 
-		JScrollPane jsp = new JScrollPane(list);
+		JScrollPane jsp = new JScrollPane(this.list);
 		jsp.setBorder(null);
 		add(jsp);
 
@@ -188,47 +187,27 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 	
 	private void setupTray()
 	{
-		final SystemTray tray = SystemTray.getSystemTray();
+		this.tray = new Tray();
 		
-		Dimension size = tray.getTrayIconSize();
-		BufferedImage add = createImage("add.png", null);
-		this.defaultIcon = createImage("dragn.png", size);
-		this.newIcon = new BufferedImage(size.width, size.height, BufferedImage.TYPE_INT_ARGB);
-		Graphics2D graphics = this.newIcon.createGraphics();
-		graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-		graphics.drawImage(this.defaultIcon, 0, 0, size.width, size.height, null);
-		graphics.drawImage(add,size.width-add.getWidth(), size.height-add.getHeight(), add.getWidth(), add.getHeight(), null);
-		graphics.dispose();
-		
-		this.trayIcon = new TrayIcon(this.defaultIcon);
-		this.trayIcon.setImageAutoSize(true);
-		final TrayMenu menu = new TrayMenu(this);
-		trayIcon.setPopupMenu(menu);
-
-		this.addFocusListener(new FocusAdapter() {
+		this.addWindowFocusListener(new WindowFocusListener() { // TODO: Test on OSX
 			@Override
-			public void focusGained(FocusEvent e)
+			public void windowLostFocus(WindowEvent e)
 			{
-				Dumpster.this.trayIcon.setImage(defaultIcon);
+			}
+			@Override
+			public void windowGainedFocus(WindowEvent e)
+			{
+				Dumpster.this.tray.setDefaultIcon(); 
 			}
 		});
 		
-		this.addFocusListener(new FocusAdapter() {
-			@Override
-			public void focusGained(FocusEvent e)
-			{
-				Dumpster.this.trayIcon.setImage(defaultIcon);
-			}
-		});
-		
-		trayIcon.addMouseListener(new MouseAdapter() {
+		this.tray.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				if( e.getButton() == MouseEvent.BUTTON1 )
 				{
 					if( !Dumpster.this.isVisible() )
 					{
-						Dumpster.this.trayIcon.setImage(defaultIcon);
 						Point p = Settings.instance.getLocation();
 						if( p != null )
 							Dumpster.this.setLocation(p);
@@ -237,36 +216,6 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 				}
 			}
 		});
-
-		try {
-			tray.add(trayIcon);
-		} catch (AWTException ball) {
-			ball.printStackTrace();
-		}
-	}
-
-	/**
-	 * @param string
-	 * @return
-	 */
-	private static BufferedImage createImage(String string, Dimension size) {
-		try {
-			URL url = Dumpster.class.getClassLoader().getResource(string);
-			BufferedImage img = ImageIO.read(url);
-			if( size != null )
-			{
-				BufferedImage scaled = new BufferedImage(size.width, size.height, BufferedImage.TYPE_INT_ARGB);
-				Graphics2D graphics = scaled.createGraphics();
-				graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-				graphics.drawImage(img, 0, 0, size.width, size.height, null);
-				graphics.dispose();
-				return scaled;
-			}
-			return img;
-		} catch (Throwable ball) {
-			ball.printStackTrace();
-			return null;
-		}
 	}
 	
 	protected void addSharedFile(SharedFile shared) {
@@ -281,8 +230,8 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 	 */
 	@Override
 	public void onReceive(final Receiver receiver) {
-		if( !this.hasFocus() )
-			this.trayIcon.setImage(newIcon);
+		if( !this.isFocused() ) // TODO: Test on OSX
+			this.tray.setDecorator("add", true);
 		addSharedFile(new ReceivedSharedFile(receiver));
 	}
 

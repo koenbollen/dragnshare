@@ -1,4 +1,4 @@
-package nl.thanod.dragnshare;
+package nl.thanod.dragnshare.ui;
 
 import java.awt.Desktop;
 import java.awt.MenuItem;
@@ -7,15 +7,14 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.URI;
 
+import nl.thanod.dragnshare.Dumpster;
+
 public class TrayMenu extends PopupMenu
 {
 	private static final long serialVersionUID = -5944495892788958118L;
 	
-	protected final Dumpster parent;
-	
 	public TrayMenu( Dumpster parent )
 	{
-		this.parent = parent;
 		MenuItem i;
 		
 		i = new MenuItem("About");
