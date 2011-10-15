@@ -3,11 +3,15 @@
  */
 package nl.thanod.dragnshare;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.Observable;
+import java.util.Observer;
 
 import javax.swing.*;
-import javax.swing.filechooser.FileSystemView;
 
 import nl.thanod.dragnshare.ui.InteractiveList.ListViewable;
 
@@ -15,9 +19,13 @@ import nl.thanod.dragnshare.ui.InteractiveList.ListViewable;
  * @author nilsdijk
  */
 public class ShareInfo extends JPanel implements ListViewable {
+	
+	public interface Monitor {
+		void onRemove(ShareInfo info);
+	}
 
 	public static final JFileChooser chooser = new JFileChooser();
-	
+
 	/**
 	 * 
 	 */
@@ -25,23 +33,73 @@ public class ShareInfo extends JPanel implements ListViewable {
 
 	protected JLabel label;
 
-	private SharedFile sf;
+	protected SharedFile sf;
+	private final JLabel status;
 
 	private int index;
-
 	private boolean focused;
-
 	private boolean selected;
 
+	private JLabel close;
+	
+	private Monitor monitor;
+
 	public ShareInfo(SharedFile sf) {
-		super(new FlowLayout(FlowLayout.LEADING));
+		super(new BorderLayout());
+		setBorder(BorderFactory.createEmptyBorder(2, 2, 0, 2));
 		this.sf = sf;
 		this.setPreferredSize(new Dimension(0, 50));
 
 		Icon icon = chooser.getIcon(sf.getFile());
-		this.add(label = new JLabel(sf.getName()));
+		this.add(label = new JLabel(sf.getName()), BorderLayout.NORTH);
 		this.label.setIcon(icon);
-		
+
+		if (sf instanceof Observable) {
+			final JProgressBar prog;
+			this.add(prog = new JProgressBar(0, 100), BorderLayout.CENTER);
+			((Observable) sf).addObserver(new Observer() {
+				@Override
+				public void update(Observable paramObservable, Object paramObject) {
+					prog.setValue((int) (ShareInfo.this.sf.getProgress() * 100));
+					if (ShareInfo.this.sf.getProgress() == 1f)
+						ShareInfo.this.remove(prog);
+					ShareInfo.this.updateView();
+				}
+			});
+		}
+
+		this.add(this.status = new JLabel("status here"), BorderLayout.SOUTH);
+		this.status.setForeground(Color.LIGHT_GRAY);
+		this.status.setBorder(BorderFactory.createEmptyBorder(0, icon.getIconWidth() + 4, 0, 0));
+
+		this.add(this.close = new JLabel(getIcon("cancel.png")), BorderLayout.EAST);
+		this.close.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent paramMouseEvent) {
+				ShareInfo.this.removeFromList();
+			}
+		});
+	}
+
+	/**
+	 * 
+	 */
+	public void removeFromList() {
+		if (this.monitor != null)
+			this.monitor.onRemove(this);
+	}
+
+	/**
+	 * @param name
+	 * @return
+	 */
+	private static Icon getIcon(String name) {
+		try {
+			return new ImageIcon(ShareInfo.class.getClassLoader().getResource(name));
+		} catch (Throwable ball) {
+			ball.printStackTrace();
+			return null;
+		}
 	}
 
 	public SharedFile getSharedFile() {
@@ -92,11 +150,18 @@ public class ShareInfo extends JPanel implements ListViewable {
 		updateView();
 	}
 
-	private void updateView() {
+	protected void updateView() {
 		ColorScheme cs = this.sf.getColorScheme();
 		if (selected)
 			cs = ColorScheme.SELECTED;
 		setBackground(cs.getColor(this.index));
 		repaint();
+	}
+
+	/**
+	 * @param object
+	 */
+	public void setMonitor(Monitor monitor) {
+		this.monitor = monitor;
 	}
 }

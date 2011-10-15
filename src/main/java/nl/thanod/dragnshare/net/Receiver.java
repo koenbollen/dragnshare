@@ -123,7 +123,7 @@ public class Receiver extends Thread
 					for (Listener listener:listeners)
 						listener.onProgress(this.target, this.filename, this.filesize, count);
 				}
-			} while (n > 0);
+			} while (n > 0 && !Thread.interrupted());
 
 			if (count != this.filesize)
 				throw new IOException("didn't receive enough bytes.");

@@ -123,6 +123,8 @@ public class InteractiveListSelector<E extends ListViewable> extends MouseAdapte
 
 		for (int i = begin; i <= to; i++) {
 			E e = this.list.elementAt(i);
+			if (this.selected.contains(e))
+				continue;
 			e.viewStateSelected(true);
 			this.selected.add(e);
 		}
@@ -139,6 +141,14 @@ public class InteractiveListSelector<E extends ListViewable> extends MouseAdapte
 
 	public List<E> getSelected() {
 		return new ArrayList<E>(this.selected);
+	}
+	
+	public void unselect(E e){
+		e.viewStateSelected(false);
+		e.viewStateFocus(false);
+		this.selected.remove(e);
+		if (this.focused == e)
+			this.focused = null;
 	}
 
 }

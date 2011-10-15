@@ -22,6 +22,7 @@ import nl.thanod.dragnshare.net.Receiver;
 import nl.thanod.dragnshare.net.Sender;
 import nl.thanod.dragnshare.notify.Notifier;
 import nl.thanod.dragnshare.ui.InteractiveList;
+import nl.thanod.dragnshare.ui.TopLineBorder;
 import nl.thanod.dragnshare.ui.Tray;
 import nl.thanod.util.ScreenInfo;
 import nl.thanod.util.Settings;
@@ -41,6 +42,8 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 	protected final InteractiveList<ShareInfo> list;
 
 	protected Tray tray;
+
+	private JButton clearall;
 
 	public Dumpster() {
 		super((Frame)null,"Drag'n Share");
@@ -72,6 +75,8 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 				if (e.getClickCount() == 2){
 					if (Desktop.isDesktopSupported()){
 						for (ShareInfo o:list.getSelector().getSelected()){
+							if (!o.getSharedFile().isReady())
+								continue;
 							try {
 								Desktop.getDesktop().open(o.getSharedFile().getFile());
 							} catch (IOException ball) {
@@ -92,8 +97,7 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 			@Override
 			public void filesDropped(File[] files) {
 				for (final File file : files) {
-					Dumpster.this.sharer.share(file);
-					//sharer.share(file);
+//					Dumpster.this.sharer.share(file);
 					addSharedFile(new SharedFile() {
 						@Override
 						public File getFile() {
@@ -114,6 +118,16 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 						public ColorScheme getColorScheme() {
 							return ColorScheme.OFFERED;
 						}
+
+						@Override
+						public boolean isReady() {
+							return true;
+						}
+
+						@Override
+						public void remove() {
+							//TODO implement;
+						}
 					});
 				}
 
@@ -124,7 +138,26 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 
 		JScrollPane jsp = new JScrollPane(this.list);
 		jsp.setBorder(null);
-		add(jsp);
+		
+		FlowLayout fl;
+		JPanel buttons = new JPanel(fl = new FlowLayout(FlowLayout.TRAILING));
+		buttons.setBackground(Color.WHITE);
+		fl.setVgap(2);
+		buttons.setBorder(new TopLineBorder(Color.LIGHT_GRAY));
+		buttons.add(this.clearall = new JButton("clear all"));
+		this.clearall.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent paramActionEvent) {
+				List<ShareInfo> l = Dumpster.this.list.getModel().getElements();
+				for (ShareInfo si:l)
+					si.removeFromList();
+			}
+		});
+		
+		JPanel container = new JPanel(new BorderLayout());
+		container.add(jsp, BorderLayout.CENTER);
+		container.add(buttons, BorderLayout.SOUTH);
+		add(container);
 
 		setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
 		addWindowListener(new WindowAdapter() {
@@ -160,8 +193,13 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 				//get files
 				List<File> files = new ArrayList<File>();
 				List<ShareInfo> selected = Dumpster.this.list.getSelector().getSelected();
-				for (ShareInfo o:selected)
-					files.add(o.getSharedFile().getFile());
+				final List<ShareInfo> dragged = new ArrayList<ShareInfo>();
+				for (ShareInfo o:selected){
+					if (o.getSharedFile().isReady()){
+						files.add(o.getSharedFile().getFile());
+						dragged.add(o);
+					}
+				}
 						
 				if (files.size() == 0)
 					return;
@@ -173,7 +211,7 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 						if( dsde.getDropAction() == DnDConstants.ACTION_MOVE )
 						{
 							// delete all selected from model
-							Dumpster.this.list.getModel().removeAll(Dumpster.this.list.getSelector().getSelected());
+							Dumpster.this.list.getModel().removeAll(dragged);
 						}
 						// hide window after dragging, if option is set:
 						if( Settings.instance.getBool("hideDropZone") )
@@ -219,7 +257,15 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 	}
 	
 	protected void addSharedFile(SharedFile shared) {
-		this.list.getModel().add(0, new ShareInfo(shared));
+		ShareInfo info;
+		this.list.getModel().add(0, info = new ShareInfo(shared));
+		info.setMonitor(new ShareInfo.Monitor() {
+			@Override
+			public void onRemove(ShareInfo info) {
+				Dumpster.this.list.getModel().remove(info);
+				info.getSharedFile().remove();
+			}
+		});
 	}
 
 	/*

@@ -20,6 +20,7 @@ public class ReceivedSharedFile extends Observable implements SharedFile, Receiv
 	private File file;
 	private volatile float progress;
 	private ColorScheme colorScheme = ColorScheme.RECEIVED;
+	private boolean ready;
 
 	/**
 	 * @param receiver
@@ -92,10 +93,13 @@ public class ReceivedSharedFile extends Observable implements SharedFile, Receiv
 	 * @param f
 	 */
 	private void updateProgress(float progress) {
-		if (progress < 1)
+		if (progress < 1){
 			this.colorScheme = ColorScheme.RECEIVED;
-		else
+			this.ready = false;
+		}else{
 			this.colorScheme = ColorScheme.DEFAULT;
+			this.ready = true;
+		}
 		this.progress = progress;
 
 		this.setChanged();
@@ -112,6 +116,7 @@ public class ReceivedSharedFile extends Observable implements SharedFile, Receiv
 		e.printStackTrace();
 		updateProgress(1f);
 		this.colorScheme = ColorScheme.ERROR;
+		this.ready = false;
 		setChanged();
 		notifyObservers();
 	}
@@ -123,5 +128,23 @@ public class ReceivedSharedFile extends Observable implements SharedFile, Receiv
 	@Override
 	public ColorScheme getColorScheme() {
 		return this.colorScheme ;
+	}
+
+	/* (non-Javadoc)
+	 * @see nl.thanod.dragnshare.SharedFile#isReady()
+	 */
+	@Override
+	public boolean isReady() {
+		return this.ready;
+	}
+
+	/* (non-Javadoc)
+	 * @see nl.thanod.dragnshare.SharedFile#remove()
+	 */
+	@Override
+	public void remove() {
+		this.receiver.interrupt();
+		
+		//TODO remove file from temp
 	}
 }

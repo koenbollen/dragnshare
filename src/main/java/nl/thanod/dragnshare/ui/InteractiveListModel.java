@@ -105,4 +105,8 @@ public class InteractiveListModel<E> {
 	public E elementAt(int index){
 		return this.elementAt(index);
 	}
+	
+	public List<E> getElements(){
+		return new ArrayList<E>(this.elements);
+	}
 }

@@ -18,7 +18,7 @@ import nl.thanod.dragnshare.ui.InteractiveList.ListViewable;
  * @author nilsdijk
  */
 public class InteractiveList<E extends ListViewable> extends JPanel implements InteractiveListModel.Listener<E> {
-
+	
 	public static interface ListViewable {
 		JComponent getView();
 		void viewStateSelected(boolean selected);
@@ -97,6 +97,7 @@ public class InteractiveList<E extends ListViewable> extends JPanel implements I
 	 */
 	@Override
 	public void removedFromModel(int index, E e) {
+		this.selector.unselect(e);
 		this.list.remove(index);
 		this.elements.remove(index);
 		updateIndexes(index);
@@ -107,8 +108,13 @@ public class InteractiveList<E extends ListViewable> extends JPanel implements I
 	/**
 	 * @param point
 	 */
+	@SuppressWarnings("unchecked")
 	public E getElementAt(Point point) {
-		return (E)this.list.getComponentAt(point);
+		try {
+			return (E)this.list.getComponentAt(point);
+		} catch(ClassCastException ball){
+			return null;
+		}
 	}
 	
 	public int indexOf(E e){
@@ -123,8 +129,8 @@ public class InteractiveList<E extends ListViewable> extends JPanel implements I
 	}
 	
 	private void updateIndexes(int from){		
-		from = Math.max(from, 0);
-		for (int i=from; i<this.elements.size(); i++)
+		int f = Math.max(from, 0);
+		for (int i=f; i<this.elements.size(); i++)
 			this.elements.get(i).viewStateIndex(i);
 	}
 	
@@ -142,13 +148,16 @@ public class InteractiveList<E extends ListViewable> extends JPanel implements I
 	
 	static class StringView extends JPanel implements ListViewable {
 
-		private String s;
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 2822839565240917129L;
+		
 		private int index=0;
 
 		public StringView(String toView) {
 			super(new BorderLayout());
 			setPreferredSize(new Dimension(50, 50));
-			this.s = toView;
 			this.add(new JLabel(toView));
 			
 			setOpaque(true);

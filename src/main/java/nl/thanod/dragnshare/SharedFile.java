@@ -19,4 +19,8 @@ public interface SharedFile {
 	float getProgress();
 	
 	ColorScheme getColorScheme();
+	
+	boolean isReady();
+	
+	void remove();
 }
