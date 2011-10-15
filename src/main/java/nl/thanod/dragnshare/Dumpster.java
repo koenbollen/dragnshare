@@ -97,7 +97,7 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 			@Override
 			public void filesDropped(File[] files) {
 				for (final File file : files) {
-//					Dumpster.this.sharer.share(file);
+					Dumpster.this.sharer.share(file);
 					addSharedFile(new SharedFile() {
 						@Override
 						public File getFile() {
