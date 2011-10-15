@@ -10,6 +10,7 @@ import java.util.Observable;
 
 import nl.thanod.dragnshare.DumpsterListCellRenderer.ColorScheme;
 import nl.thanod.dragnshare.net.Receiver;
+import nl.thanod.dragnshare.notify.Notifier;
 
 /**
  * @author nilsdijk
@@ -84,7 +85,7 @@ public class ReceivedSharedFile extends Observable implements SharedFile, Receiv
 	 */
 	@Override
 	public void onCompleted(File result, String filename, long filesize) {
-		DragnShareNotifier.notify(DragnShareNotifier.Type.RECEIVED, "Received", "You received " + result.getName());
+		Notifier.Factory.notify(Notifier.Type.RECEIVED, "Received", "You received " + result.getName());
 		this.updateProgress(1f);
 	}
 
@@ -93,9 +94,9 @@ public class ReceivedSharedFile extends Observable implements SharedFile, Receiv
 	 */
 	private void updateProgress(float progress) {
 		if (progress < 1)
-			colorScheme = ColorScheme.RECEIVED;
+			this.colorScheme = ColorScheme.RECEIVED;
 		else
-			colorScheme = ColorScheme.DEFAULT;
+			this.colorScheme = ColorScheme.DEFAULT;
 		this.progress = progress;
 
 		this.setChanged();
@@ -111,7 +112,7 @@ public class ReceivedSharedFile extends Observable implements SharedFile, Receiv
 	public void onError(File target, String filename, long filesize, IOException e) {
 		e.printStackTrace();
 		updateProgress(1f);
-		colorScheme = ColorScheme.ERROR;
+		this.colorScheme = ColorScheme.ERROR;
 		setChanged();
 		notifyObservers();
 	}

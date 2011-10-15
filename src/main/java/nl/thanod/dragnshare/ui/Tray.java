@@ -32,7 +32,7 @@ public class Tray extends TrayIcon implements Runnable
 		super(staticinit());
 		
 		this.setImageAutoSize(false);
-		
+		this.setToolTip("Drag'n Share (click to open DropZone)");
 		this.setPopupMenu(new TrayMenu(null));
 		
 		this.base = (BufferedImage)this.getImage();
