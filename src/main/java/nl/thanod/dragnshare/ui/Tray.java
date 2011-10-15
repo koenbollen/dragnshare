@@ -191,4 +191,24 @@ public class Tray extends TrayIcon implements Runnable
 			return null;
 		return createImage( u, null );
 	}
+
+	/**
+	 * Find's the first Tray of type 'Tray' in the system tray.
+	 * 
+	 * @return 
+	 */
+	public static Tray findTray()
+	{
+		SystemTray systray = SystemTray.getSystemTray();
+		Tray t = null;
+		for( TrayIcon ti : systray.getTrayIcons() )
+		{
+			if( ti instanceof Tray )
+			{
+				t = (Tray)ti;
+				break;
+			}
+		}
+		return t;
+	}
 }

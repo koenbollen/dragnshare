@@ -1,9 +1,6 @@
 package nl.thanod.dragnshare.notify;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.Arrays;
 
 import nl.thanod.util.OS;
 

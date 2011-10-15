@@ -4,9 +4,7 @@
 package nl.thanod.dragnshare;
 
 
-import java.awt.Desktop;
-import java.awt.Frame;
-import java.awt.Point;
+import java.awt.*;
 import java.awt.datatransfer.Transferable;
 import java.awt.dnd.*;
 import java.awt.event.*;
@@ -23,6 +21,7 @@ import nl.thanod.dragnshare.net.Receiver;
 import nl.thanod.dragnshare.net.Sender;
 import nl.thanod.dragnshare.notify.Notifier;
 import nl.thanod.dragnshare.ui.Tray;
+import nl.thanod.util.ScreenInfo;
 import nl.thanod.util.Settings;
 
 /**
@@ -208,8 +207,9 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 				{
 					if( !Dumpster.this.isVisible() )
 					{
+						Dimension size = Dumpster.this.getSize();
 						Point p = Settings.instance.getLocation();
-						if( p != null )
+						if( p != null && ScreenInfo.intersects(new Rectangle(p, size)) )
 							Dumpster.this.setLocation(p);
 					}
 					Dumpster.this.setVisible(!Dumpster.this.isVisible());
