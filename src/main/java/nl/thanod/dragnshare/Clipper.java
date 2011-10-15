@@ -1,6 +1,5 @@
 package nl.thanod.dragnshare;
 
-import java.awt.Component;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
@@ -9,6 +8,7 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
@@ -21,19 +21,22 @@ import nl.thanod.util.OS;
  */
 public class Clipper
 {
+	private final Dumpster dropzone;
 	private final Clipboard clipboard;
 	private final List<FileDrop.Listener> listeners;
 
-	public Clipper(Component watch, FileDrop.Listener listener)
+	public Clipper(Dumpster dropzone, FileDrop.Listener listener)
 	{
+		this.dropzone = dropzone;
 		this.listeners = new ArrayList<FileDrop.Listener>();
 		this.clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 		this.listeners.add( listener );
-		watch.addKeyListener(new KeyAdapter() {
+		dropzone.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyReleased(KeyEvent e)
 			{
-				System.out.println(e);
+				if( e.isConsumed() )
+					return;
 				boolean meta = false;
 				if (OS.isOSX() && e.isMetaDown())
 					meta = true;
@@ -41,8 +44,22 @@ public class Clipper
 					meta = true;
 				if (meta && e.getKeyCode() == KeyEvent.VK_V)
 					Clipper.this.paste();
+				if (meta && ( e.getKeyCode() == KeyEvent.VK_X || e.getKeyCode() == KeyEvent.VK_C ) )
+					Clipper.this.copy();
 			}
 		});
+	}
+
+	protected void copy()
+	{
+		List<ShareInfo> selected = this.dropzone.list.getSelector().getSelected();
+		List<File> files = new ArrayList<File>();
+		for( ShareInfo si : selected )
+			if( !files.contains(si.getSharedFile().getFile()) )
+					files.add( si.getSharedFile().getFile() );
+		System.out.println(files.toString());
+		FileTransferable ft = new FileTransferable(files);
+		this.clipboard.setContents(ft, null);
 	}
 
 	protected void paste()
@@ -77,7 +94,6 @@ public class Clipper
 			{
 				if (df.isRepresentationClassReader())
 				{
-
 					Reader reader;
 					try
 					{

@@ -6,8 +6,10 @@ package nl.thanod.dragnshare;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -19,6 +21,7 @@ public class FileTransferable implements Transferable
 	final private DataFlavor[] flavors;
 
 	public static final DataFlavor TEXT_URI_FLAVOR;
+	public static final DataFlavor GNOMEFILELIST_FLAVOR;
 
 	static
 	{
@@ -32,6 +35,15 @@ public class FileTransferable implements Transferable
 		}
 		;
 		TEXT_URI_FLAVOR = tmp;
+		tmp = null;
+		try
+		{
+			tmp = new DataFlavor( "x-special/gnome-copied-files" );
+		} catch (ClassNotFoundException e)
+		{
+			e.printStackTrace();
+		}
+		GNOMEFILELIST_FLAVOR = tmp;
 	}
 
 	/**
@@ -44,7 +56,7 @@ public class FileTransferable implements Transferable
 	public FileTransferable(Collection<File> files)
 	{
 		this.files = Collections.unmodifiableList(new ArrayList<File>(files));
-		this.flavors = new DataFlavor[] { DataFlavor.javaFileListFlavor, TEXT_URI_FLAVOR };
+		this.flavors = new DataFlavor[] { DataFlavor.javaFileListFlavor, TEXT_URI_FLAVOR, GNOMEFILELIST_FLAVOR };
 	}
 
 	static FileTransferable createFileInTempDirectory(String filename) throws IOException
@@ -67,6 +79,23 @@ public class FileTransferable implements Transferable
 			return null;
 		if (DataFlavor.javaFileListFlavor.equals(flavor))
 			return this.files;
+		if (flavor.equals(GNOMEFILELIST_FLAVOR))
+		{
+	        if( List.class == flavor.getRepresentationClass() ) {
+	            return this.files;
+	        } else if( InputStream.class == flavor.getRepresentationClass() ) {
+				StringBuffer sb = new StringBuffer("copy\n"); // Always copy!
+				for (int i = 0; i < this.files.size(); i++)
+				{
+					File file = this.files.get(i);
+					sb.append(file.toURI());
+					if (i != this.files.size() - 1)
+						sb.append("\n");
+				}
+				
+				return new ByteArrayInputStream( sb.toString().getBytes() );
+	        }
+		}
 		if (flavor.equals(TEXT_URI_FLAVOR))
 		{
 			StringBuffer sb = new StringBuffer();
