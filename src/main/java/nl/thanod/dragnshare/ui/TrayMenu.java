@@ -26,7 +26,7 @@ public class TrayMenu extends PopupMenu
 				{
 					try
 					{
-						Desktop.getDesktop().browse(new URI("http://github.com/koenbollen/dragnshare"));
+						Desktop.getDesktop().browse(new URI("http://koenbollen.github.com/dragnshare"));
 					} catch (Exception e)
 					{
 						e.printStackTrace();

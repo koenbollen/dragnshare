@@ -15,6 +15,7 @@ import java.util.UUID;
 
 import javax.swing.*;
 
+import nl.thanod.DebugUtil;
 import nl.thanod.dragnshare.net.MulticastShare;
 import nl.thanod.dragnshare.net.MulticastShare.AvailableFile;
 import nl.thanod.dragnshare.net.Receiver;
@@ -43,6 +44,8 @@ public class DropZone extends JDialog implements MulticastShare.Listener {
 	protected Tray tray;
 
 	private JButton clearall;
+	
+	protected volatile boolean dragging = false;
 
 	public DropZone() {
 		super((Frame) null, "Drag'n Share");
@@ -96,6 +99,9 @@ public class DropZone extends JDialog implements MulticastShare.Listener {
 		FileDrop.Listener dropper = new FileDrop.Listener() {
 			@Override
 			public void filesDropped(File[] files) {
+				if (DropZone.this.dragging)
+					return;
+				
 				for (final File file : files) {
 					DropZone.this.sharer.share(file);
 					addSharedFile(new SharedFile() {
@@ -208,11 +214,14 @@ public class DropZone extends JDialog implements MulticastShare.Listener {
 
 				if (files.size() == 0)
 					return;
+				
+				DropZone.this.dragging = true;
 
 				Transferable t = new FileTransferable(files);
 				ds.startDrag(evt, DragSource.DefaultMoveDrop, t, new DragSourceAdapter() {
 					@Override
 					public void dragDropEnd(DragSourceDropEvent dsde) {
+						DropZone.this.dragging = false;
 						if (dsde.getDropAction() == DnDConstants.ACTION_MOVE) {
 							// delete all selected from model
 							DropZone.this.list.getModel().removeAll(dragged);
@@ -239,8 +248,16 @@ public class DropZone extends JDialog implements MulticastShare.Listener {
 				DropZone.this.tray.setDefaultIcon();
 			}
 		});
-
+		
+		this.tray.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent paramActionEvent) {
+				System.err.println(paramActionEvent);
+			}
+		});
 		this.tray.addMouseListener(new MouseAdapter() {
+			
 			@Override
 			public void mousePressed(MouseEvent e) {
 				if (e.getButton() == MouseEvent.BUTTON1) {
