@@ -21,6 +21,7 @@ import nl.thanod.dragnshare.DumpsterListCellRenderer.ColorScheme;
 import nl.thanod.dragnshare.net.MulticastShare;
 import nl.thanod.dragnshare.net.Receiver;
 import nl.thanod.dragnshare.net.Sender;
+import nl.thanod.dragnshare.notify.Notifier;
 import nl.thanod.dragnshare.ui.Tray;
 import nl.thanod.util.Settings;
 
@@ -29,9 +30,7 @@ import nl.thanod.util.Settings;
  * @author Koen Bollen <meneer@koenbollen>
  */
 public class Dumpster extends JDialog implements MulticastShare.Listener {
-	/**
-	 * 
-	 */
+	
 	private static final long serialVersionUID = 7192301082111534982L;
 
 	protected volatile int count = 0;
@@ -46,6 +45,9 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 
 	public Dumpster() {
 		super((Frame)null,"Drag'n Share");
+		
+		Notifier.Factory.dropZone = this;
+		
 		this.sharer = new MulticastShare();
 		try {
 			this.sharer.connect();
@@ -57,9 +59,6 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 		this.sharer.start();
 		
 		this.setupTray();
-		
-		//this.setModal(true);
-		this.setResizable(false);
 
 		this.filelist = new ObservingDefaultListModel();
 		
@@ -142,7 +141,8 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 				instance.setLocation(Dumpster.this.getLocation());
 			}
 		});
-		
+
+		setResizable(false);
 		setAlwaysOnTop(true);
 		setSize(400, 300);
 		setLocationRelativeTo(null);

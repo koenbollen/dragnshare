@@ -1,6 +1,7 @@
 package nl.thanod.dragnshare.ui;
 
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashMap;
@@ -39,10 +40,24 @@ public class SettingsPane extends JFrame
 	private void createInterfacePane(JTabbedPane tabs)
 	{
 		JPanel p = new JPanel();
+		p.setLayout(new FlowLayout(FlowLayout.LEADING));
 		
 		//JTextArea groupKey = new JTextArea("<group key>");
 		//groupKey.setEditable(false); // TODO: Enable when implemented.
 		//p.add( groupKey );
+
+		String msg = "Show a notification message when a file is received.";
+		final JCheckBox showNotify = new JCheckBox(msg);
+		showNotify.setSelected(Settings.instance.getBool("showNotifications", true));
+		showNotify.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				Settings.instance.setBool("showNotifications", showNotify.isSelected());
+			}
+		});
+		p.add(showNotify);
+		
 		
 		final JCheckBox hideDropZone = new JCheckBox("Hide window when an item is dragged from the drop zone.");
 		hideDropZone.setSelected(Settings.instance.getBool("hideDropZone"));

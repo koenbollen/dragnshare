@@ -6,6 +6,9 @@ package nl.thanod.dragnshare.notify;
 import java.util.ArrayList;
 import java.util.List;
 
+import nl.thanod.dragnshare.Dumpster;
+import nl.thanod.util.Settings;
+
 /**
  * @author nilsdijk
  * @author Koen Bollen <meneer@koenbollen>
@@ -48,6 +51,7 @@ public interface Notifier {
 
 	public static class Factory
 	{
+		public static Dumpster dropZone = null;
 		private static List<Notifier> notifiers;
 		static
 		{
@@ -68,6 +72,10 @@ public interface Notifier {
 		
 		public static void notify(Notifier.Type type, String title, String message)
 		{
+			if( !Settings.instance.getBool("showNotifications", true) )
+				return;
+			if( Factory.dropZone != null && Factory.dropZone.isFocused() ) // TODO: Test isFocused() on OSX
+				return;
 			Notifier notifier = Factory.notifier();
 			if( notifier != null )
 				notifier.notify(type, title, message);

@@ -162,6 +162,13 @@ public class Settings extends Properties
 		return new File( userdir, ".dragnshare.xml" );
 	}
 
+	public boolean getBool(String key, boolean def)
+	{
+		String value = this.getProperty(key);
+		if( value == null )
+			return def;
+		return Boolean.parseBoolean(value);
+	}
 	public boolean getBool(String key)
 	{
 		return Boolean.parseBoolean(this.getProperty(key));
