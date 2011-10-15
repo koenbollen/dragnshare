@@ -51,8 +51,8 @@ import java.io.Reader;
  * @version 1.0.1
  */
 public class FileDrop {
-	private transient javax.swing.border.Border normalBorder;
-	private transient java.awt.dnd.DropTargetListener dropListener;
+	protected transient javax.swing.border.Border normalBorder;
+	protected transient java.awt.dnd.DropTargetListener dropListener;
 
 	/** Discover if the running JVM is modern enough to have drag and drop. */
 	private static Boolean supportsDnD;
@@ -233,6 +233,7 @@ public class FileDrop {
 
 		if (supportsDnD()) { // Make a drop listener
 			dropListener = new java.awt.dnd.DropTargetListener() {
+				@Override
 				public void dragEnter(java.awt.dnd.DropTargetDragEvent evt) {
 					log(out, "FileDrop: dragEnter event.");
 
@@ -258,10 +259,12 @@ public class FileDrop {
 					} // end else: drag not ok
 				} // end dragEnter
 
+				@Override
 				public void dragOver(java.awt.dnd.DropTargetDragEvent evt) { // This is called continually as long as the mouse is
 																				// over the drag target.
 				} // end dragOver
 
+				@Override
 				public void drop(java.awt.dnd.DropTargetDropEvent evt) {
 					log(out, "FileDrop: drop event.");
 					try { // Get whatever was dropped
@@ -275,8 +278,7 @@ public class FileDrop {
 							log(out, "FileDrop: file list accepted.");
 
 							// Get a useful list
-							java.util.List fileList = (java.util.List) tr.getTransferData(java.awt.datatransfer.DataFlavor.javaFileListFlavor);
-							java.util.Iterator iterator = fileList.iterator();
+							java.util.List<?> fileList = (java.util.List<?>) tr.getTransferData(java.awt.datatransfer.DataFlavor.javaFileListFlavor);
 
 							// Convert list to array
 							java.io.File[] filesTemp = new java.io.File[fileList.size()];
@@ -345,6 +347,7 @@ public class FileDrop {
 					} // end finally
 				} // end drop
 
+				@Override
 				public void dragExit(java.awt.dnd.DropTargetEvent evt) {
 					log(out, "FileDrop: dragExit event.");
 					// If it's a Swing component, reset its border
@@ -355,6 +358,7 @@ public class FileDrop {
 					} // end if: JComponent
 				} // end dragExit
 
+				@Override
 				public void dropActionChanged(java.awt.dnd.DropTargetDragEvent evt) {
 					log(out, "FileDrop: dropActionChanged event.");
 					// Is this an acceptable drag event?
@@ -381,7 +385,7 @@ public class FileDrop {
 		if (supportsDnD == null) {
 			boolean support = false;
 			try {
-				Class arbitraryDndClass = Class.forName("java.awt.dnd.DnDConstants");
+				Class.forName("java.awt.dnd.DnDConstants");
 				support = true;
 			} // end try
 			catch (Exception e) {
@@ -395,9 +399,9 @@ public class FileDrop {
 	// BEGIN 2007-09-12 Nathan Blomquist -- Linux (KDE/Gnome) support added.
 	private static String ZERO_CHAR_STRING = "" + (char) 0;
 
-	private static File[] createFileArray(BufferedReader bReader, PrintStream out) {
+	protected static File[] createFileArray(BufferedReader bReader, PrintStream out) {
 		try {
-			java.util.List list = new java.util.ArrayList();
+			java.util.List<File> list = new java.util.ArrayList<File>();
 			java.lang.String line = null;
 			while ((line = bReader.readLine()) != null) {
 				try {
@@ -412,7 +416,7 @@ public class FileDrop {
 				}
 			}
 
-			return (java.io.File[]) list.toArray(new File[list.size()]);
+			return list.toArray(new File[list.size()]);
 		} catch (IOException ex) {
 			log(out, "FileDrop: IOException");
 		}
@@ -434,6 +438,7 @@ public class FileDrop {
 
 		// Listen for hierarchy changes and remove the drop target when the parent gets cleared out.
 		c.addHierarchyListener(new java.awt.event.HierarchyListener() {
+			@Override
 			public void hierarchyChanged(java.awt.event.HierarchyEvent evt) {
 				log(out, "FileDrop: Hierarchy changed.");
 				java.awt.Component parent = c.getParent();
@@ -464,7 +469,7 @@ public class FileDrop {
 	} // end dropListener
 
 	/** Determine if the dragged data is a file list. */
-	private boolean isDragOk(final java.io.PrintStream out, final java.awt.dnd.DropTargetDragEvent evt) {
+	protected boolean isDragOk(final java.io.PrintStream out, final java.awt.dnd.DropTargetDragEvent evt) {
 		boolean ok = false;
 
 		// Get data flavors being dragged
@@ -495,7 +500,7 @@ public class FileDrop {
 	} // end isDragOk
 
 	/** Outputs <tt>message</tt> to <tt>out</tt> if it's not null. */
-	private static void log(java.io.PrintStream out, String message) { // Log message if requested
+	protected static void log(java.io.PrintStream out, String message) { // Log message if requested
 		if (out != null)
 			out.println(message);
 	} // end log
@@ -587,6 +592,10 @@ public class FileDrop {
 	 */
 	public static class Event extends java.util.EventObject {
 
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -579164055306024136L;
 		private java.io.File[] files;
 
 		/**
@@ -727,7 +736,7 @@ public class FileDrop {
 		 *            The {@link Fetcher} that will return the data object
 		 * @since 1.1
 		 */
-		public TransferableObject(Class dataClass, Fetcher fetcher) {
+		public TransferableObject(Class<?> dataClass, Fetcher fetcher) {
 			this.fetcher = fetcher;
 			this.customFlavor = new java.awt.datatransfer.DataFlavor(dataClass, MIME_TYPE);
 		} // end constructor
@@ -755,6 +764,7 @@ public class FileDrop {
 		 * @return An array of supported data flavors
 		 * @since 1.1
 		 */
+		@Override
 		public java.awt.datatransfer.DataFlavor[] getTransferDataFlavors() {
 			if (customFlavor != null)
 				return new java.awt.datatransfer.DataFlavor[] { customFlavor, DATA_FLAVOR, java.awt.datatransfer.DataFlavor.stringFlavor }; // end flavors array
@@ -773,6 +783,7 @@ public class FileDrop {
 		 * @return The dropped data
 		 * @since 1.1
 		 */
+		@Override
 		public Object getTransferData(java.awt.datatransfer.DataFlavor flavor) throws java.awt.datatransfer.UnsupportedFlavorException, java.io.IOException {
 			// Native object
 			if (flavor.equals(DATA_FLAVOR))
@@ -795,6 +806,7 @@ public class FileDrop {
 		 * @return Whether or not the flavor is supported
 		 * @since 1.1
 		 */
+		@Override
 		public boolean isDataFlavorSupported(java.awt.datatransfer.DataFlavor flavor) {
 			// Native object
 			if (flavor.equals(DATA_FLAVOR))

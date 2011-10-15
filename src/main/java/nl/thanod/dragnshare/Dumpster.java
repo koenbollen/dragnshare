@@ -16,12 +16,12 @@ import java.util.UUID;
 
 import javax.swing.*;
 
-import nl.thanod.dragnshare.DumpsterListCellRenderer.ColorScheme;
 import nl.thanod.dragnshare.net.MulticastShare;
 import nl.thanod.dragnshare.net.MulticastShare.AvailableFile;
 import nl.thanod.dragnshare.net.Receiver;
 import nl.thanod.dragnshare.net.Sender;
 import nl.thanod.dragnshare.notify.Notifier;
+import nl.thanod.dragnshare.ui.InteractiveList;
 import nl.thanod.dragnshare.ui.Tray;
 import nl.thanod.util.ScreenInfo;
 import nl.thanod.util.Settings;
@@ -38,9 +38,7 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 
 	protected final MulticastShare sharer;
 
-	protected final DefaultListModel filelist;
-
-	protected final JList list;
+	protected final InteractiveList<ShareInfo> list;
 
 	protected Tray tray;
 
@@ -60,11 +58,12 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 		this.sharer.start();
 		
 		this.setupTray();
-
-		this.filelist = new ObservingDefaultListModel();
 		
-		this.list = new JList(this.filelist);
-		this.list.addMouseListener(new MouseAdapter() {
+		//this.setModal(true);
+		this.setResizable(false);
+		
+		list = new InteractiveList<ShareInfo>();
+		list.addMouseListener(new MouseAdapter() {
 			/* (non-Javadoc)
 			 * @see java.awt.event.MouseAdapter#mouseClicked(java.awt.event.MouseEvent)
 			 */
@@ -72,13 +71,11 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 			public void mouseClicked(MouseEvent e) {
 				if (e.getClickCount() == 2){
 					if (Desktop.isDesktopSupported()){
-						for (Object o: Dumpster.this.list.getSelectedValues()){
-							if (o instanceof SharedFile){
-								try {
-									Desktop.getDesktop().open(((SharedFile)o).getFile());
-								} catch (IOException ball) {
-									ball.printStackTrace();
-								}
+						for (ShareInfo o:list.getSelector().getSelected()){
+							try {
+								Desktop.getDesktop().open(o.getSharedFile().getFile());
+							} catch (IOException ball) {
+								ball.printStackTrace();
 							}
 						}
 					}
@@ -86,14 +83,17 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 			}
 		});
 		
-		this.list.setCellRenderer(new DumpsterListCellRenderer());
-		this.list.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		JLabel drop;
+		list.setDrop(drop = new JLabel("drop here"));
+		drop.setHorizontalAlignment(SwingConstants.CENTER);
+		drop.setForeground(Color.LIGHT_GRAY);
 		
 		new FileDrop(this, new FileDrop.Listener() {
 			@Override
 			public void filesDropped(File[] files) {
 				for (final File file : files) {
 					Dumpster.this.sharer.share(file);
+					//sharer.share(file);
 					addSharedFile(new SharedFile() {
 						@Override
 						public File getFile() {
@@ -159,10 +159,9 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 			public void dragGestureRecognized(DragGestureEvent evt) {
 				//get files
 				List<File> files = new ArrayList<File>();
-				final Object[] selected = Dumpster.this.list.getSelectedValues();
-				for (Object o:selected)
-					if (o instanceof SharedFile)
-						files.add(((SharedFile)o).getFile());
+				List<ShareInfo> selected = Dumpster.this.list.getSelector().getSelected();
+				for (ShareInfo o:selected)
+					files.add(o.getSharedFile().getFile());
 						
 				if (files.size() == 0)
 					return;
@@ -174,8 +173,7 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 						if( dsde.getDropAction() == DnDConstants.ACTION_MOVE )
 						{
 							// delete all selected from model
-							for (Object o:Dumpster.this.list.getSelectedValues())
-								Dumpster.this.filelist.removeElement(o);
+							Dumpster.this.list.getModel().removeAll(Dumpster.this.list.getSelector().getSelected());
 						}
 						// hide window after dragging, if option is set:
 						if( Settings.instance.getBool("hideDropZone") )
@@ -221,7 +219,7 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 	}
 	
 	protected void addSharedFile(SharedFile shared) {
-		this.filelist.add(this.filelist.size(), shared);
+		this.list.getModel().add(0, new ShareInfo(shared));
 	}
 
 	/*

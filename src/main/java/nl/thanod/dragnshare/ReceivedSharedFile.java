@@ -8,7 +8,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Observable;
 
-import nl.thanod.dragnshare.DumpsterListCellRenderer.ColorScheme;
 import nl.thanod.dragnshare.net.Receiver;
 import nl.thanod.dragnshare.notify.Notifier;
 
