@@ -23,4 +23,6 @@ public interface SharedFile {
 	boolean isReady();
 	
 	void remove();
+	
+	boolean canSave();
 }

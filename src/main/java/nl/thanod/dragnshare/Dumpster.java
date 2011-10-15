@@ -129,6 +129,11 @@ public class Dumpster extends JDialog implements MulticastShare.Listener {
 						public void remove() {
 							//TODO implement;
 						}
+
+						@Override
+						public boolean canSave() {
+							return false;
+						}
 					});
 				}
 

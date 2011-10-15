@@ -147,4 +147,12 @@ public class ReceivedSharedFile extends Observable implements SharedFile, Receiv
 		
 		//TODO remove file from temp
 	}
+
+	/* (non-Javadoc)
+	 * @see nl.thanod.dragnshare.SharedFile#canSave()
+	 */
+	@Override
+	public boolean canSave() {
+		return true;
+	}
 }

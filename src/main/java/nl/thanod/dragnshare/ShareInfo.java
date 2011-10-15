@@ -6,8 +6,10 @@ package nl.thanod.dragnshare;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -19,7 +21,7 @@ import nl.thanod.dragnshare.ui.InteractiveList.ListViewable;
  * @author nilsdijk
  */
 public class ShareInfo extends JPanel implements ListViewable {
-	
+
 	public interface Monitor {
 		void onRemove(ShareInfo info);
 	}
@@ -41,7 +43,7 @@ public class ShareInfo extends JPanel implements ListViewable {
 	private boolean selected;
 
 	private JLabel close;
-	
+
 	private Monitor monitor;
 
 	public ShareInfo(SharedFile sf) {
@@ -72,13 +74,47 @@ public class ShareInfo extends JPanel implements ListViewable {
 		this.status.setForeground(Color.LIGHT_GRAY);
 		this.status.setBorder(BorderFactory.createEmptyBorder(0, icon.getIconWidth() + 4, 0, 0));
 
-		this.add(this.close = new JLabel(getIcon("cancel.png")), BorderLayout.EAST);
+		JPanel buttons = new JPanel(new FlowLayout(FlowLayout.LEADING, 0, 0));
+		buttons.add(this.close = new JLabel(getIcon("cancel.png")));
+		this.close.setOpaque(false);
 		this.close.addMouseListener(new MouseAdapter() {
 			@Override
-			public void mouseClicked(MouseEvent paramMouseEvent) {
+			public void mouseClicked(MouseEvent e) {
+				if (e.getClickCount() != 1 || e.getButton() != MouseEvent.BUTTON1)
+					return;
 				ShareInfo.this.removeFromList();
+				e.consume();
 			}
 		});
+
+		if (sf.canSave()) {
+			final JLabel save;
+			buttons.add(save = new JLabel(getIcon("disk.png")));
+			save.setOpaque(false);
+			save.addMouseListener(new MouseAdapter() {
+				/*
+				 * (non-Javadoc)
+				 * @see java.awt.event.MouseAdapter#mouseClicked(java.awt.event.
+				 * MouseEvent)
+				 */
+				@Override
+				public void mouseClicked(MouseEvent e) {
+					if (e.getClickCount() != 1 || e.getButton() != MouseEvent.BUTTON1)
+						return;
+					if (!ShareInfo.this.sf.isReady())
+						return;
+					e.consume();
+					chooser.setSelectedFile(new File(ShareInfo.this.sf.getFile().getName()));
+					if (chooser.showSaveDialog(ShareInfo.this) == JFileChooser.APPROVE_OPTION) {
+						File f = chooser.getSelectedFile();
+						ShareInfo.this.sf.getFile().renameTo(f);
+						removeFromList();
+					}
+
+				}
+			});
+		}
+		this.add(buttons, BorderLayout.EAST);
 	}
 
 	/**
