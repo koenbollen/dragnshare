@@ -14,7 +14,7 @@
 					<archive>
 						<index>true</index>
 						<manifest>
-							<mainClass>nl.thanod.dragnshare.Dumpster</mainClass>
+							<mainClass>nl.thanod.dragnshare.DropZone</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
@@ -26,7 +26,7 @@
 				<configuration>
 					<bundleName>Drag'n Share</bundleName>
 					<iconFile>${basedir}/Dragon Ball.icns</iconFile>
-					<mainClass>nl.thanod.dragnshare.Dumpster</mainClass>
+					<mainClass>nl.thanod.dragnshare.DropZone</mainClass>
 					<jvmVersion>1.6+</jvmVersion>
 				</configuration>
 				<executions>

@@ -127,7 +127,7 @@ public class Receiver extends Thread
 			} while (n > 0 && !Thread.interrupted());
 
 			if (count != this.filesize)
-				throw new IOException("didn't receive enough bytes.");
+				throw new IOException("didn't receive enough bytes (expected "+this.filesize+" bytes, got "+count+").");
 
 			this.currentStatus = Status.COMPLETED;
 
@@ -166,7 +166,7 @@ public class Receiver extends Thread
 
 	public void addCompletionListener(Receiver.Listener listener)
 	{
-		if (!this.listeners.contains(listener))
+		if (listener != null && !this.listeners.contains(listener))
 			this.listeners.add(listener);
 	}
 

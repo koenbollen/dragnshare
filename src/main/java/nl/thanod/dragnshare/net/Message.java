@@ -78,8 +78,7 @@ public class Message implements Serializable
 		MessageType t = MessageType.values()[Integer.parseInt(pieces[0])];
 		if (t == MessageType.OFFER)
 			return new Message(Long.parseLong(pieces[2]), pieces[3], UUID.fromString(pieces[1]));
-		else
-			return new Message(UUID.fromString(pieces[1]), Integer.parseInt(pieces[2]));
+		return new Message(UUID.fromString(pieces[1]), Integer.parseInt(pieces[2]));
 	}
 
 	public MessageType getType()
