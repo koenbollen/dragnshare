@@ -31,8 +31,8 @@ public class ShareInfo extends JPanel implements ListViewable, Observer {
 	}
 
 	public static final JFileChooser chooser = new JFileChooser();
-	private static final Border NONFOCUSED = BorderFactory.createEmptyBorder(5, 3, 2, 3);
-	private static final Border FOCUSED = BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1), BorderFactory.createCompoundBorder(new DottedLineBorder(Color.BLACK), BorderFactory.createEmptyBorder(3, 1, 0, 1)));
+	private static final Border NONFOCUSED = BorderFactory.createEmptyBorder(7, 7, 7, 7);
+	private static final Border FOCUSED = BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1), BorderFactory.createCompoundBorder(new DottedLineBorder(Color.BLACK), BorderFactory.createEmptyBorder(5, 5, 5, 5)));
 
 	/**
 	 * 
@@ -68,7 +68,7 @@ public class ShareInfo extends JPanel implements ListViewable, Observer {
 		this.coloredComponents.add(this.container);
 
 		this.sf = sf;
-		this.setPreferredSize(new Dimension(0, 50));
+		this.setPreferredSize(new Dimension(0, 60));
 
 		Icon icon = chooser.getIcon(sf.getFile());
 		this.container.add(this.label = new JLabel(sf.getName()), BorderLayout.NORTH);
@@ -82,15 +82,16 @@ public class ShareInfo extends JPanel implements ListViewable, Observer {
 		this.status.setForeground(Color.LIGHT_GRAY);
 		this.status.setBorder(BorderFactory.createEmptyBorder(0, icon.getIconWidth() + 4, 0, 0));
 
-		int vgap = ((this.getPreferredSize().height - icon.getIconHeight()) / 2 ) -1 ;
+		int vgap = ((this.getPreferredSize().height - icon.getIconHeight()) / 2 ) - 7;
 		this.buttons = new JPanel(new FlowLayout(FlowLayout.LEADING, 2, vgap));
-		this.coloredComponents.add(buttons);
+		this.coloredComponents.add(this.buttons);
 		
 		if (sf.shouldStart()){
 			this.start = new JLabel(getIcon("play.png"));
-			this.coloredComponents.add(start);
-			buttons.add(start);
-			start.addMouseListener(new MouseAdapter() {
+			this.start.setToolTipText("start download");
+			this.coloredComponents.add(this.start);
+			this.buttons.add(this.start);
+			this.start.addMouseListener(new MouseAdapter() {
 				/* (non-Javadoc)
 				 * @see java.awt.event.MouseAdapter#mouseClicked(java.awt.event.MouseEvent)
 				 */
@@ -105,9 +106,10 @@ public class ShareInfo extends JPanel implements ListViewable, Observer {
 			});
 		}
 		
-		buttons.add(Box.createHorizontalStrut(5));
-		buttons.add(this.close = new JLabel(getIcon("cancel.png")));
+		this.buttons.add(Box.createHorizontalStrut(5));
+		this.buttons.add(this.close = new JLabel(getIcon("cancel.png")));
 		this.coloredComponents.add(this.close);
+		this.close.setToolTipText("stop & remove");
 		this.close.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -120,7 +122,7 @@ public class ShareInfo extends JPanel implements ListViewable, Observer {
 		});
 
 		this.add(this.container, BorderLayout.CENTER);
-		this.add(buttons, BorderLayout.EAST);
+		this.add(this.buttons, BorderLayout.EAST);
 
 		updateView();
 	}

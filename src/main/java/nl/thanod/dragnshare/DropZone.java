@@ -39,7 +39,7 @@ public class DropZone extends JDialog implements MulticastShare.Listener {
 
 	protected Tray tray;
 
-	private JButton clearall;
+	private JLabel clearall;
 	
 	protected volatile boolean dragging = false;
 
@@ -183,6 +183,7 @@ public class DropZone extends JDialog implements MulticastShare.Listener {
 		this.sharer.addMulticastListener(this);
 
 		JScrollPane jsp = new JScrollPane(this.list, ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+		jsp.setViewportBorder(null);
 		jsp.setBorder(null);
 
 		BorderLayout fl;
@@ -190,13 +191,19 @@ public class DropZone extends JDialog implements MulticastShare.Listener {
 		buttons.setBackground(Color.WHITE);
 		fl.setVgap(2);
 		buttons.setBorder(new TopLineBorder(Color.LIGHT_GRAY));
-		buttons.add(this.clearall = new JButton("clear all"), BorderLayout.EAST);
-		this.clearall.addActionListener(new ActionListener() {
+		JPanel clearpane = new JPanel(new FlowLayout(FlowLayout.TRAILING));
+		clearpane.setBackground(Color.WHITE);
+		clearpane.add(this.clearall = new JLabel(ShareInfo.getIcon("bin.png")));
+		this.clearall.setBackground(Color.WHITE);
+		this.clearall.setToolTipText("clear all");
+		this.clearall.addMouseListener(new MouseAdapter() {
 			@Override
-			public void actionPerformed(ActionEvent paramActionEvent) {
+			public void mouseClicked(MouseEvent e)
+			{
 				DropZone.this.list.getModel().removeAll(DropZone.this.list.getModel().getElements());
 			}
 		});
+		buttons.add(clearpane, BorderLayout.EAST);
 		
 		JPanel quitpref = new JPanel(new FlowLayout(FlowLayout.LEADING));
 		final JLabel quit;
