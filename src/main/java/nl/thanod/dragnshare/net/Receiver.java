@@ -1,6 +1,7 @@
 package nl.thanod.dragnshare.net;
 
 import java.io.*;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -58,20 +59,27 @@ public class Receiver extends Thread
 	private final UUID messageid;
 	private final String filename;
 	private final long filesize;
+	private final InetAddress addr;
+	private final MulticastShare parent;
 	private File target;
 	private ServerSocket s;
 	private volatile Status currentStatus;
 	private final List<Listener> listeners;
+	private boolean started;
 
-	public Receiver(UUID messageid, String filename, long filesize, File target)
+	public Receiver(UUID messageid, String filename, long filesize, InetAddress addr, MulticastShare parent )
 	{
 		this.setDaemon(true);
+		this.addr = addr;
+		this.parent = parent;
+		this.target = null;
 		this.messageid = messageid;
-		this.target = target;
 		this.filename = filename;
 		this.filesize = filesize;
 		this.currentStatus = Status.STARTING;
 		this.listeners = Collections.synchronizedList(new ArrayList<Receiver.Listener>());
+		
+		this.started = false;
 
 		this.s = null;
 	}
@@ -87,6 +95,23 @@ public class Receiver extends Thread
 			this.target.createNewFile();
 		}
 		this.s = new ServerSocket(0, 1);
+	}
+	
+	@Override
+	public synchronized void start()
+	{
+		if( this.started )
+			return;
+		this.started = true;
+		super.start();
+		try
+		{
+			this.parent.send(new Message(this.messageid, this.getLocalPort()), this.addr);
+		} catch(IOException e )
+		{
+			e.printStackTrace();
+			this.interrupt();
+		}
 	}
 
 	@Override
@@ -207,5 +232,10 @@ public class Receiver extends Thread
 
 	public long getFilesize() {
 		return this.filesize;
+	}
+	
+	public boolean isStarted()
+	{
+		return this.started;
 	}
 }

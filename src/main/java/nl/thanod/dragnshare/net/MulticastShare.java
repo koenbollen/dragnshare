@@ -24,32 +24,17 @@ import org.apache.commons.net.util.SubnetUtils;
 public class MulticastShare extends Thread
 {
 	public interface Listener {
-		public void onAvailable( UUID id, AvailableFile info );
 		void onReceive(Receiver receiver);
 		void onSending(Sender sender);
 		void onSent(Sender sender);
 	}
 	public static class Adapter implements Listener {
 		@Override
-		public void onAvailable( UUID id, AvailableFile info ) {}
-		@Override
 		public void onReceive(Receiver receiver) {}
 		@Override
 		public void onSending(Sender sender) {}
 		@Override
 		public void onSent(Sender sender) {}
-	}
-
-	public class AvailableFile 
-	{
-		public final Message message;
-		public final InetAddress address;
-		public AvailableFile(Message message, InetAddress address)
-		{
-			super();
-			this.message = message;
-			this.address = address;
-		}
 	}
 	
 	public static final int MULTICASTPORT = 5432;
@@ -60,7 +45,6 @@ public class MulticastShare extends Thread
 	private MulticastSocket multisocket;
 
 	private final Map<UUID, File> files;
-	private final Map<UUID, AvailableFile> available;
 	
 	private final List<Listener> listeners;
 	
@@ -72,7 +56,6 @@ public class MulticastShare extends Thread
 		this.setDaemon(true);
 		this.multisocket = null;
 		this.files = Collections.synchronizedMap(new HashMap<UUID, File>());
-		this.available = Collections.synchronizedMap(new HashMap<UUID, AvailableFile>());
 		this.listeners = Collections.synchronizedList(new ArrayList<Listener>());
 		this.filesCreated = Collections.synchronizedSet(new HashSet<File>());
 		
@@ -139,50 +122,27 @@ public class MulticastShare extends Thread
 			case OFFER:
 				if (this.files.containsKey(m.getID()))
 					break;
-				long limit = Settings.instance.getInt("automaticDownloadLimit", 100) * 1024 * 1024;
-				if( limit != 0 && m.getFilesize() > limit )
+				Receiver r = new Receiver(m.getID(), m.getFilename(), m.getFilesize(), packet.getAddress(), this);
+				try
 				{
-					AvailableFile info = new AvailableFile(m, packet.getAddress() );
-					this.available.put( m.getID(), info );
+					r.connect();
+					
+					long limit = Settings.instance.getInt("automaticDownloadLimit", 100) * 1024 * 1024;
+					if( limit == 0 || m.getFilesize() <= limit )
+						r.start();
+
+					this.filesCreated.add(r.getTarget());
 					List<Listener> listeners = new ArrayList<MulticastShare.Listener>(this.listeners);
 					for (Listener listener:listeners)
-						listener.onAvailable(m.getID(), info);
-				} else {
-					startReceiving(m, packet.getAddress());
+						listener.onReceive(r);
+					
+				} catch (IOException e)
+				{
+					e.printStackTrace();
 				}
 				break;
 			}
 		}
-	}
-
-	private void startReceiving(Message m, InetAddress addr)
-	{
-		Receiver r = new Receiver(m.getID(), m.getFilename(), m.getFilesize(), null);
-		try
-		{
-			r.connect();
-			
-			this.filesCreated.add(r.getTarget());
-			List<Listener> listeners = new ArrayList<MulticastShare.Listener>(this.listeners);
-			for (Listener listener:listeners)
-				listener.onReceive(r);
-					
-			int port = r.getLocalPort();
-			r.start();
-			this.send(new Message(m.getID(), port), addr);
-			
-		} catch (IOException e)
-		{
-			e.printStackTrace();
-		}
-	}
-	
-	public void accept( UUID id )
-	{
-		if( !this.available.containsKey(id) )
-			return;
-		AvailableFile a = this.available.get(id);
-		this.startReceiving( a.message, a.address );
 	}
 
 	public void send(Message m) throws IOException

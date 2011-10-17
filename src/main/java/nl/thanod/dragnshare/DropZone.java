@@ -11,13 +11,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import javax.swing.*;
 
 import nl.thanod.DebugUtil;
 import nl.thanod.dragnshare.net.MulticastShare;
-import nl.thanod.dragnshare.net.MulticastShare.AvailableFile;
 import nl.thanod.dragnshare.net.Receiver;
 import nl.thanod.dragnshare.net.Sender;
 import nl.thanod.dragnshare.notify.Notifier;
@@ -317,6 +315,9 @@ public class DropZone extends JDialog implements MulticastShare.Listener {
 		if (!this.isFocused()) // TODO: Test on OSX
 			this.tray.setDecorator("add", true);
 		addSharedFile(new ReceivedSharedFile(receiver));
+		
+		// TODO: Wait for button press:
+		receiver.start();
 	}
 
 	@Override
@@ -338,26 +339,6 @@ public class DropZone extends JDialog implements MulticastShare.Listener {
 		}
 
 		new DropZone();
-	}
-
-	@Override
-	public void onAvailable(UUID id, AvailableFile info) {
-		// TODO: Show an available file in the DropZone and call this.sharer.accept( id ) when it's accepted by the user;
-		final UUID idd = id;
-		System.err.println("file larger then limit is available, this isn't implemented yet... Accepting in 5 sec..");
-		Thread t = new Thread(new Runnable() {
-
-			@Override
-			public void run() {
-				try {
-					Thread.sleep(5000);
-				} catch (InterruptedException e) {
-				}
-				DropZone.this.sharer.accept(idd);
-			}
-		});
-		t.setDaemon(true);
-		t.start();
 	}
 
 }
