@@ -18,6 +18,7 @@ import nl.thanod.dragnshare.net.MulticastShare;
 import nl.thanod.dragnshare.net.Receiver;
 import nl.thanod.dragnshare.net.Sender;
 import nl.thanod.dragnshare.notify.Notifier;
+import nl.thanod.dragnshare.notify.Notifier.Type;
 import nl.thanod.dragnshare.ui.InteractiveList;
 import nl.thanod.dragnshare.ui.InteractiveListModel;
 import nl.thanod.dragnshare.ui.TopLineBorder;
@@ -75,13 +76,16 @@ public class DropZone extends JDialog implements MulticastShare.Listener {
 				if (e.getClickCount() == 2){
 					if (Desktop.isDesktopSupported()){
 						for (ShareInfo o:DropZone.this.list.getSelector().getSelected()){
-							if (!o.getSharedFile().isReady())
-								continue;
-
-							try {
-								Desktop.getDesktop().open(o.getSharedFile().getFile());
-							} catch (IOException ball) {
-								ball.printStackTrace();
+							if (o.getSharedFile().shouldStart()){
+								o.getSharedFile().start();
+							} else {
+								if (!o.getSharedFile().isReady())
+									continue;
+								try {
+									Desktop.getDesktop().open(o.getSharedFile().getFile());
+								} catch (IOException ball) {
+									ball.printStackTrace();
+								}
 							}
 						}
 					}
@@ -311,7 +315,15 @@ public class DropZone extends JDialog implements MulticastShare.Listener {
 			public void onRemove(ShareInfo info) {
 				DropZone.this.list.getModel().remove(info);
 			}
+
+			@Override
+			public void onAccept(ShareInfo info) {
+				info.getSharedFile().start();
+			}
 		});
+		
+		if (shared.shouldStart())
+			Notifier.Factory.notify(Type.RECEIVED, "Big file", "The file " + shared.getName() + " is offerd but exeeded the size for automatic download.");
 	}
 
 	/*

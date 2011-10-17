@@ -27,6 +27,7 @@ public class ShareInfo extends JPanel implements ListViewable, Observer {
 
 	public interface Monitor {
 		void onRemove(ShareInfo info);
+		void onAccept(ShareInfo info);
 	}
 
 	public static final JFileChooser chooser = new JFileChooser();
@@ -51,9 +52,11 @@ public class ShareInfo extends JPanel implements ListViewable, Observer {
 
 	private List<JComponent> coloredComponents = new ArrayList<JComponent>();
 
-	private Monitor monitor;
+	protected Monitor monitor;
 	private JProgressBar progress;
 	private JPanel container;
+	private JLabel start;
+	private JPanel buttons;
 
 	public ShareInfo(SharedFile sf) {
 		super(new BorderLayout());
@@ -80,11 +83,11 @@ public class ShareInfo extends JPanel implements ListViewable, Observer {
 		this.status.setBorder(BorderFactory.createEmptyBorder(0, icon.getIconWidth() + 4, 0, 0));
 
 		int vgap = ((this.getPreferredSize().height - icon.getIconHeight()) / 2 ) -1 ;
-		final JPanel buttons = new JPanel(new FlowLayout(FlowLayout.LEADING, 2, vgap));
+		this.buttons = new JPanel(new FlowLayout(FlowLayout.LEADING, 2, vgap));
 		this.coloredComponents.add(buttons);
 		
 		if (sf.shouldStart()){
-			final JLabel start = new JLabel(getIcon("play.png"));
+			this.start = new JLabel(getIcon("play.png"));
 			this.coloredComponents.add(start);
 			buttons.add(start);
 			start.addMouseListener(new MouseAdapter() {
@@ -94,20 +97,12 @@ public class ShareInfo extends JPanel implements ListViewable, Observer {
 				@Override
 				public void mouseClicked(MouseEvent e) {
 					if (e.getClickCount() != 1 || e.getButton() != MouseEvent.BUTTON1)
-						return;
-					ShareInfo.this.sf.start();
-					SwingUtilities.invokeLater(new Runnable() {
-						
-						@Override
-						public void run() {
-							buttons.remove(start);
-							buttons.revalidate();
-						}
-					});
+						return;					
+					if (ShareInfo.this.monitor != null)
+						ShareInfo.this.monitor.onAccept(ShareInfo.this);
 					e.consume();
 				}
 			});
-			
 		}
 		
 		buttons.add(Box.createHorizontalStrut(5));
@@ -118,7 +113,8 @@ public class ShareInfo extends JPanel implements ListViewable, Observer {
 			public void mouseClicked(MouseEvent e) {
 				if (e.getClickCount() != 1 || e.getButton() != MouseEvent.BUTTON1)
 					return;
-				ShareInfo.this.removeFromList();
+				if (ShareInfo.this.monitor != null)
+					ShareInfo.this.monitor.onRemove(ShareInfo.this);
 				e.consume();
 			}
 		});
@@ -127,14 +123,6 @@ public class ShareInfo extends JPanel implements ListViewable, Observer {
 		this.add(buttons, BorderLayout.EAST);
 
 		updateView();
-	}
-
-	/**
-	 * 
-	 */
-	public void removeFromList() {
-		if (this.monitor != null)
-			this.monitor.onRemove(this);
 	}
 
 	/**
@@ -241,6 +229,11 @@ public class ShareInfo extends JPanel implements ListViewable, Observer {
 				this.progress = null;
 				this.container.revalidate();
 			}
+		}
+		
+		if (this.start != null && !this.sf.shouldStart()){
+			this.buttons.remove(this.start);
+			this.start = null;
 		}
 		
 		this.status.setText(this.sf.getStatus());
