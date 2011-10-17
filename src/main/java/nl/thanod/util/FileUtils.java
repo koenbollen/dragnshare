@@ -83,4 +83,19 @@ public class FileUtils
 			
 		return res;
 	}
+
+	public static void clean(File f)
+	{
+		FileUtils.createdFiles.remove(f);
+		if( f.exists() )
+		{
+			f.delete();
+		}
+		File zip = new File( f+".zip" );
+		if( zip.exists() )
+			zip.delete();
+		f = f.getParentFile();
+		if( f.exists() && f.isDirectory() && f.getName().startsWith(FileUtils.PREFIX) )
+			f.delete();
+	}
 }

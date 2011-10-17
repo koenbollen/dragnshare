@@ -197,7 +197,6 @@ public class Receiver extends Thread
 		}
 		catch (InterruptedException e)
 		{
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally
 		{

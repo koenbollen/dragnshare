@@ -20,7 +20,6 @@ import nl.thanod.dragnshare.net.Sender;
 import nl.thanod.dragnshare.notify.Notifier;
 import nl.thanod.dragnshare.notify.Notifier.Type;
 import nl.thanod.dragnshare.ui.*;
-import nl.thanod.util.OS;
 import nl.thanod.util.ScreenInfo;
 import nl.thanod.util.Settings;
 
@@ -366,7 +365,7 @@ public class DropZone extends JDialog implements MulticastShare.Listener {
 	 */
 	@Override
 	public void onReceive(final Receiver receiver) {
-		if (!this.isFocused()) // TODO: Test on OSX
+		if (!this.isFocused())
 		{
 			if( !receiver.isStarted() )
 				this.tray.setDecorator("accept", true);

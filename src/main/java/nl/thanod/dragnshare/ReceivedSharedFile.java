@@ -175,8 +175,8 @@ public class ReceivedSharedFile extends Observable implements SharedFile, Receiv
 	@Override
 	public void remove() {
 		this.receiver.interrupt();
-		
-		//TODO remove file from temp
+		// TODO: Make sure directories are removed.
+		FileUtils.clean( this.receiver.getTarget() );
 	}
 
 	/* (non-Javadoc)
