@@ -62,7 +62,7 @@ public class ShareInfo extends JPanel implements ListViewable, Observer {
 		this.coloredComponents.add(this);
 		
 		this.container = new JPanel(new BorderLayout());
-		this.coloredComponents.add(container);
+		this.coloredComponents.add(this.container);
 
 		this.sf = sf;
 		this.setPreferredSize(new Dimension(0, 50));
@@ -75,27 +75,16 @@ public class ShareInfo extends JPanel implements ListViewable, Observer {
 			((Observable)sf).addObserver(this);
 		}
 		
-		container.add(this.status = new JLabel(this.sf.getStatus()), BorderLayout.SOUTH);
+		this.container.add(this.status = new JLabel(this.sf.getStatus()), BorderLayout.SOUTH);
 		this.status.setForeground(Color.LIGHT_GRAY);
 		this.status.setBorder(BorderFactory.createEmptyBorder(0, icon.getIconWidth() + 4, 0, 0));
 
 		int vgap = ((this.getPreferredSize().height - icon.getIconHeight()) / 2 ) -1 ;
 		final JPanel buttons = new JPanel(new FlowLayout(FlowLayout.LEADING, 2, vgap));
 		this.coloredComponents.add(buttons);
-		buttons.add(this.close = new JLabel(getIcon("cancel.png")));
-		this.coloredComponents.add(this.close);
-		this.close.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				if (e.getClickCount() != 1 || e.getButton() != MouseEvent.BUTTON1)
-					return;
-				ShareInfo.this.removeFromList();
-				e.consume();
-			}
-		});
 		
 		if (sf.shouldStart()){
-			final JLabel start = new JLabel(getIcon("accept.png"));
+			final JLabel start = new JLabel(getIcon("play.png"));
 			this.coloredComponents.add(start);
 			buttons.add(start);
 			start.addMouseListener(new MouseAdapter() {
@@ -118,9 +107,23 @@ public class ShareInfo extends JPanel implements ListViewable, Observer {
 					e.consume();
 				}
 			});
+			
 		}
+		
+		buttons.add(Box.createHorizontalStrut(5));
+		buttons.add(this.close = new JLabel(getIcon("cancel.png")));
+		this.coloredComponents.add(this.close);
+		this.close.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if (e.getClickCount() != 1 || e.getButton() != MouseEvent.BUTTON1)
+					return;
+				ShareInfo.this.removeFromList();
+				e.consume();
+			}
+		});
 
-		this.add(container, BorderLayout.CENTER);
+		this.add(this.container, BorderLayout.CENTER);
 		this.add(buttons, BorderLayout.EAST);
 
 		updateView();
