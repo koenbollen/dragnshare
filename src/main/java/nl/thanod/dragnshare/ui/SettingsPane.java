@@ -120,7 +120,8 @@ public class SettingsPane extends JFrame
 		});
 		p.add(hideDropZone);
 		
-		final JCheckBox autoClear = new JCheckBox("Automatically clear shared files 10 seconds after completion.");
+		int timeout = Settings.instance.getInt("autoClearTimeout", 10);
+		final JCheckBox autoClear = new JCheckBox("Automatically clear shared files "+timeout+" seconds after completion.");
 		autoClear.setSelected(Settings.instance.getBool("autoClear"));
 		autoClear.addActionListener(new ActionListener() {
 			@Override

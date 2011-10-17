@@ -161,7 +161,7 @@ public class SendContainer extends Observable implements SharedFile, MulticastSh
 						SendContainer.this.view.remove();
 					return null;
 				}
-			}, 10, TimeUnit.SECONDS);
+			}, Settings.instance.getInt("autoClearTimeout", 10), TimeUnit.SECONDS);
 		}
 		
 		setChanged();
