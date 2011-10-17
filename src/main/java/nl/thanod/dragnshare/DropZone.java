@@ -313,7 +313,7 @@ public class DropZone extends JDialog implements MulticastShare.Listener {
 	private void setupTray() {
 		this.tray = new Tray();
 
-		this.addWindowFocusListener(new WindowFocusListener() { // TODO: Test on OSX
+		this.addWindowFocusListener(new WindowFocusListener() {
 			@Override
 			public void windowLostFocus(WindowEvent e) {
 			}
@@ -367,21 +367,19 @@ public class DropZone extends JDialog implements MulticastShare.Listener {
 	@Override
 	public void onReceive(final Receiver receiver) {
 		if (!this.isFocused()) // TODO: Test on OSX
-			this.tray.setDecorator("add", true);
+		{
+			if( !receiver.isStarted() )
+				this.tray.setDecorator("accept", true);
+		}
 		addSharedFile(new ReceivedSharedFile(receiver));
-		
-		// TODO: Wait for button press:
-		//receiver.start();
 	}
 
 	@Override
 	public void onSending(Sender sender) {
-		//System.out.println("onSending");
 	}
 
 	@Override
 	public void onSent(Sender sender) {
-		//System.out.println("onSent");
 	}
 
 	public static void main(String... args) {

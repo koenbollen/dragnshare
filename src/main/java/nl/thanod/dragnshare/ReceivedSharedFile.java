@@ -10,6 +10,7 @@ import java.util.Observable;
 
 import nl.thanod.dragnshare.net.Receiver;
 import nl.thanod.dragnshare.notify.Notifier;
+import nl.thanod.dragnshare.ui.Tray;
 import nl.thanod.util.FileUtils;
 
 /**
@@ -25,6 +26,7 @@ public class ReceivedSharedFile extends Observable implements SharedFile, Receiv
 	private String speed = "";
 	private long speedHist = 0;
 	private String remain = "";
+	private String error = null;
 
 	/**
 	 * @param receiver
@@ -111,6 +113,7 @@ public class ReceivedSharedFile extends Observable implements SharedFile, Receiv
 	@Override
 	public void onCompleted(File result, String filename, long filesize) {
 		Notifier.Factory.notify(Notifier.Type.RECEIVED, "Received", "You received " + result.getName());
+		Tray.findTray().setDecorator("add");
 		this.updateProgress(1f);
 	}
 
@@ -142,6 +145,9 @@ public class ReceivedSharedFile extends Observable implements SharedFile, Receiv
 		updateProgress(1f);
 		this.colorScheme = ColorScheme.ERROR;
 		this.ready = false;
+		this.error  = e.getMessage();
+		Tray t = Tray.findTray();
+		t.setDecorator("exclamation");
 		setChanged();
 		notifyObservers();
 	}
@@ -196,6 +202,8 @@ public class ReceivedSharedFile extends Observable implements SharedFile, Receiv
 	 */
 	@Override
 	public String getStatus() {
+		if( this.error != null )
+			return "error: " + this.error;
 		if (!this.receiver.isStarted())
 			return "waiting for accept";
 		if (this.getProgress() < 1f)

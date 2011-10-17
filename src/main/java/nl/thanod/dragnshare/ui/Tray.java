@@ -199,15 +199,9 @@ public class Tray extends TrayIcon implements Runnable
 	public static Tray findTray()
 	{
 		SystemTray systray = SystemTray.getSystemTray();
-		Tray t = null;
 		for( TrayIcon ti : systray.getTrayIcons() )
-		{
 			if( ti instanceof Tray )
-			{
-				t = (Tray)ti;
-				break;
-			}
-		}
-		return t;
+				return (Tray)ti;
+		return null;
 	}
 }
