@@ -53,18 +53,21 @@ public class ShareInfo extends JPanel implements ListViewable {
 	public ShareInfo(SharedFile sf) {
 		super(new BorderLayout());
 		this.coloredComponents.add(this);
+
+		JPanel container = new JPanel(new BorderLayout());
+		this.coloredComponents.add(container);
 		
 		setBorder(BorderFactory.createEmptyBorder(2, 2, 0, 2));
 		this.sf = sf;
 		this.setPreferredSize(new Dimension(0, 50));
 
 		Icon icon = chooser.getIcon(sf.getFile());
-		this.add(label = new JLabel(sf.getName()), BorderLayout.NORTH);
+		container.add(this.label = new JLabel(sf.getName()), BorderLayout.NORTH);
 		this.label.setIcon(icon);
 
 		if (sf instanceof Observable) {
 			final JProgressBar prog;
-			this.add(prog = new JProgressBar(0, 100), BorderLayout.CENTER);
+			container.add(prog = new JProgressBar(0, 100), BorderLayout.CENTER);
 			((Observable) sf).addObserver(new Observer() {
 				@Override
 				public void update(Observable paramObservable, Object paramObject) {
@@ -75,12 +78,13 @@ public class ShareInfo extends JPanel implements ListViewable {
 				}
 			});
 		}
-
-		this.add(this.status = new JLabel("status here"), BorderLayout.SOUTH);
+		container.add(this.status = new JLabel("status here"), BorderLayout.SOUTH);
 		this.status.setForeground(Color.LIGHT_GRAY);
 		this.status.setBorder(BorderFactory.createEmptyBorder(0, icon.getIconWidth() + 4, 0, 0));
 
-		JPanel buttons = new JPanel(new FlowLayout(FlowLayout.LEADING, 0, 0));
+		int vgap = ((this.getPreferredSize().height - icon.getIconHeight()) / 2 ) -1 ;
+		JPanel buttons = new JPanel(new FlowLayout(FlowLayout.LEADING, 2, vgap));
+		this.coloredComponents.add(buttons);
 		buttons.add(this.close = new JLabel(getIcon("cancel.png")));
 		resizeLabel(this.close);
 		this.coloredComponents.add(this.close);
@@ -122,6 +126,7 @@ public class ShareInfo extends JPanel implements ListViewable {
 				}
 			});
 		}
+		this.add(container, BorderLayout.CENTER);
 		this.add(buttons, BorderLayout.EAST);
 		
 		updateView();
@@ -205,12 +210,12 @@ public class ShareInfo extends JPanel implements ListViewable {
 
 	protected void updateView() {
 		ColorScheme cs = this.sf.getColorScheme();
-		if (selected)
+		if (this.selected)
 			cs = ColorScheme.SELECTED;
 		
 		for (JComponent c:this.coloredComponents){
 			c.setOpaque(true);
-			c.setBackground(cs.getColor(index));
+			c.setBackground(cs.getColor(this.index));
 		}
 		repaint();
 	}
