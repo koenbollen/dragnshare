@@ -14,12 +14,12 @@ import nl.thanod.util.FileUtils;
 public class Receiver extends Thread
 {
 
-	public static final int BUFFERSIZE = 4096;
+	public static final int BUFFERSIZE = 1024*64;
 
 	public interface Listener
 	{
 		void onStart(File result, String filename, long filesize);
-		void onProgress(File result, String filename, long filesize, long received);
+		void onProgress(File result, String filename, long filesize, long received, long speed);
 		void onCompleted(File result, String filename, long filesize);
 		void onError(File target, String filename, long filesize, IOException e);
 	}
@@ -37,7 +37,7 @@ public class Receiver extends Thread
 		 * @see it.koen.dragnshare.net.Receiver.Listener#onProgress(java.io.File, java.lang.String, long, long)
 		 */
 		@Override
-		public void onProgress(File result, String filename, long filesize, long received) {}
+		public void onProgress(File result, String filename, long filesize, long received, long speed) {}
 
 		/* (non-Javadoc)
 		 * @see it.koen.dragnshare.net.Receiver.Listener#onCompleted(java.io.File, java.lang.String, long)
@@ -101,6 +101,7 @@ public class Receiver extends Thread
 		try
 		{
 			this.s = new ServerSocket(0, 1);
+			this.s.setSoTimeout(5000);
 		} catch (IOException e1)
 		{
 			e1.printStackTrace();
@@ -132,7 +133,7 @@ public class Receiver extends Thread
 		{
 			int n = 0;
 			long count = 0;
-			byte[] buffer = new byte[BUFFERSIZE + 1];
+			byte[] buffer = new byte[BUFFERSIZE];
 			client = this.s.accept();
 			in = client.getInputStream();
 			out = new FileOutputStream(this.target);
@@ -141,21 +142,32 @@ public class Receiver extends Thread
 			for (Listener listener:listeners)
 				listener.onStart(this.result, filename, filesize);
 			
+			long progressChunkSize = Math.min( 10, this.getFilesize() / 1000 );
+			long chunk = progressChunkSize;
+			
+			long startTime = System.currentTimeMillis();
 			this.currentStatus = Status.TRANSFERRING;
 			do
 			{
-				n = in.read(buffer, 0, BUFFERSIZE);
+				n = in.read(buffer, 0, buffer.length);
 				if (n > 0)
 				{
 					count += n;
 					out.write(buffer, 0, n);
 					
-					// notify listeners of received content
-					listeners = new ArrayList<Receiver.Listener>(this.listeners);
-					for (Listener listener:listeners)
-						listener.onProgress(this.result, filename, filesize, count);
+					chunk -= n;
+					if( chunk <= 0 )
+					{
+						chunk += progressChunkSize;
+						fireOnProgress(filename, filesize, count, calculateSpeed(startTime, count));
+					}
+					
+					if (n < buffer.length)
+						Thread.sleep(1);
 				}
 			} while (n > 0 && !Thread.interrupted());
+
+			fireOnProgress(filename, filesize, count, 0);
 
 			if (count != filesize)
 				throw new IOException("didn't receive enough bytes (expected "+filesize+" bytes, got "+count+").");
@@ -181,6 +193,11 @@ public class Receiver extends Thread
 			for (Listener listener:listeners)
 				listener.onError(this.result, filename, filesize, e);
 					
+		}
+		catch (InterruptedException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		} finally
 		{
 			try
@@ -199,6 +216,22 @@ public class Receiver extends Thread
 
 			}
 		}
+	}
+
+	private static long calculateSpeed(long start, long count)
+	{
+		long time = ((System.currentTimeMillis()-start) / 1000);
+		if( time == 0 )
+			return 0;
+		return count / time;
+	}
+
+	private void fireOnProgress(String filename, long filesize, long count, long speed)
+	{
+		List<Listener> listeners;
+		listeners = new ArrayList<Receiver.Listener>(this.listeners);
+		for (Listener listener:listeners)
+			listener.onProgress(this.result, filename, filesize, count, speed);
 	}
 
 	private void unzip() throws ZipException, IOException, FileNotFoundException

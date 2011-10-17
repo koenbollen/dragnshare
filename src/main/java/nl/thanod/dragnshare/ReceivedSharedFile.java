@@ -10,6 +10,7 @@ import java.util.Observable;
 
 import nl.thanod.dragnshare.net.Receiver;
 import nl.thanod.dragnshare.notify.Notifier;
+import nl.thanod.util.FileUtils;
 
 /**
  * @author nilsdijk
@@ -21,6 +22,9 @@ public class ReceivedSharedFile extends Observable implements SharedFile, Receiv
 	private volatile float progress;
 	private ColorScheme colorScheme = ColorScheme.RECEIVED;
 	private boolean ready;
+	private String speed = "";
+	private long speedHist = 0;
+	private String remain = "";
 
 	/**
 	 * @param receiver
@@ -74,7 +78,28 @@ public class ReceivedSharedFile extends Observable implements SharedFile, Receiv
 	 * java.lang.String, long, long)
 	 */
 	@Override
-	public void onProgress(File result, String filename, long filesize, long received) {
+	public void onProgress(File result, String filename, long filesize, long received, long speed) {
+		if( speed == 0 )
+		{
+			this.speed = "";
+			this.remain = "";
+		}
+		else
+		{
+			this.speedHist = (long)(this.speedHist * .9 + speed * .1);
+			speed = this.speedHist;
+			this.speed = FileUtils.humanizeBytes( speed ) + "/s";
+			
+			long time = (filesize - received) / speed;
+			
+			StringBuffer sb = new StringBuffer(" ( ");
+			sb.append( FileUtils.humanizeTime(time) );
+			sb.append( " left )" );
+			this.remain = sb.toString();
+		}
+		
+		
+		
 		this.updateProgress((float) received / (float) filesize);
 	}
 
@@ -174,7 +199,7 @@ public class ReceivedSharedFile extends Observable implements SharedFile, Receiv
 		if (!this.receiver.isStarted())
 			return "waiting for accept";
 		if (this.getProgress() < 1f)
-			return "downloading";
+			return "downloading " + this.speed + this.remain;
 		return "done";
 	}
 }

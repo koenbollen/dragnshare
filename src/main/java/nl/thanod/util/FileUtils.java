@@ -2,6 +2,7 @@ package nl.thanod.util;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -9,7 +10,10 @@ import java.util.Set;
 public class FileUtils
 {
 	public static final String PREFIX = "dragnshare";
-	
+
+	protected static final String[] byteSuffixes = new String[]{" B"," KB"," MB"," GB"," TB"};
+	protected static final String[] timeSuffixes = new String[]{" second"," minute"," hour"};
+	protected static final DecimalFormat humanizedSpeedFormat = new DecimalFormat("#.0");
 	protected static Set<File> createdFiles = Collections.synchronizedSet(new HashSet<File>());
 	
 	static
@@ -53,5 +57,30 @@ public class FileUtils
 		FileUtils.createdFiles.add(result);
 		return result;
 	}
-	
+
+	public static String humanizeBytes(double size)
+	{
+		int index = 0;
+		while (size > 1024 && index < FileUtils.byteSuffixes.length-1){
+			index++;
+			size /= 1024;
+		}
+		return FileUtils.humanizedSpeedFormat.format(size) + FileUtils.byteSuffixes[index];
+	}
+
+	public static String humanizeTime(long time)
+	{
+		double t = time;
+		int index = 0;
+		while (t > 60 && index < FileUtils.timeSuffixes.length-1){
+			index++;
+			t /= 60;
+		}
+		time = Math.round(t);
+		String res = time + FileUtils.timeSuffixes[index];
+		if( time != 1 )
+			res += "s";
+			
+		return res;
+	}
 }

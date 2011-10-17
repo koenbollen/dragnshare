@@ -1,5 +1,6 @@
 package nl.thanod.dragnshare.net;
 
+import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
 import java.net.*;
@@ -202,4 +203,33 @@ public class MulticastShare extends Thread
 			listener.onSent(s);
 	}
 
+	public static void main(String[] args) throws Exception
+	{
+		System.out.println("MulticastShare test (files: " + args.length+")");
+		MulticastShare dragnshare = new MulticastShare();
+		dragnshare.addMulticastListener(new Adapter() {
+
+			@Override
+			public void onReceive(Receiver receiver) {
+				receiver.addCompletionListener(new Receiver.Adapter() {
+					@Override
+					public void onCompleted(File result, String filename, long filesize) {
+						System.out.println("received " + result.getName());
+						if (Desktop.isDesktopSupported()){
+							try {
+								Desktop.getDesktop().open(result);
+							} catch (IOException ball) {
+							}
+						}
+					}
+				});
+			}
+		});
+
+		dragnshare.connect();
+		dragnshare.setDaemon(false);
+		dragnshare.start();
+		for (String s : args)
+			dragnshare.share(new File(s));
+	}
 }
