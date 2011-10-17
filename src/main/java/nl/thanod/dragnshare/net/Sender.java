@@ -39,6 +39,7 @@ public class Sender extends Thread
 			byte[] buffer = new byte[BUFFERSIZE];
 
 			s = new Socket(this.addr, this.port);
+			s.setSoTimeout(5000);
 
 			in = new FileInputStream(this.file);
 			OutputStream out = s.getOutputStream();

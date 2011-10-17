@@ -128,51 +128,7 @@ public class DropZone extends JDialog implements MulticastShare.Listener {
 					return;
 				
 				for (final File file : files) {
-					DropZone.this.sharer.share(file);
-					addSharedFile(new SharedFile() {
-						@Override
-						public File getFile() {
-							return file;
-						}
-
-						@Override
-						public String getName() {
-							return file.getName();
-						}
-
-						@Override
-						public float getProgress() {
-							return 1;
-						}
-
-						@Override
-						public ColorScheme getColorScheme() {
-							return ColorScheme.OFFERED;
-						}
-
-						@Override
-						public boolean isReady() {
-							return true;
-						}
-
-						@Override
-						public void remove() {
-							//TODO implement;
-						}
-
-						@Override
-						public boolean shouldStart() {
-							return false;
-						}
-
-						@Override
-						public void start() {}
-
-						@Override
-						public String getStatus() {
-							return "sharing ...";
-						}
-					});
+					addSharedFile(DropZone.this.sharer.share(file));
 				}
 
 			}

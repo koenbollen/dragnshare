@@ -155,7 +155,7 @@ public class MulticastShare extends Thread
 		this.multisocket.send(packet);
 	}
 
-	public void share(final File file)
+	public SendContainer share(final File file)
 	{
 		if( file.isDirectory() )
 		{
@@ -167,9 +167,10 @@ public class MulticastShare extends Thread
 					MulticastShare.this.doShare(zipfile, true);
 				}
 			});
-			return;
+		} else {
+			this.doShare(file, false);
 		}
-		this.doShare(file, false);
+		return new SendContainer(this, file);
 	}
 	
 	protected void doShare(File file, boolean dir)

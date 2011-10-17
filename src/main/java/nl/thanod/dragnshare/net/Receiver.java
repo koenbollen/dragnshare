@@ -200,6 +200,12 @@ public class Receiver extends Thread
 			e.printStackTrace();
 		} finally
 		{
+			try {
+				if (client != null)
+					client.close();
+			} catch (IOException e)
+			{
+			}
 			try
 			{
 				if (this.s != null)
