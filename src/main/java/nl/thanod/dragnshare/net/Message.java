@@ -20,6 +20,7 @@ public class Message implements Serializable
 	private long filesize;
 	private int port;
 	private UUID id;
+	private boolean directory;
 
 	public Message(long filesize, String filename, UUID id)
 	{
@@ -28,6 +29,7 @@ public class Message implements Serializable
 		this.filename = filename;
 		this.filesize = filesize;
 		this.id = id;
+		this.directory = false;
 	}
 
 	public Message(long filesize, String filename)
@@ -37,11 +39,13 @@ public class Message implements Serializable
 		this.filename = filename;
 		this.filesize = filesize;
 		this.id = UUID.randomUUID();
+		this.directory = false;
 	}
 
-	public Message(File file)
+	public Message(File file, boolean dir)
 	{
 		this(file.length(), file.getName());
+		this.directory = dir;
 	}
 
 	public Message(UUID id, int port)
@@ -65,6 +69,8 @@ public class Message implements Serializable
 			sb.append(this.filesize);
 			sb.append(":");
 			sb.append(this.filename);
+			sb.append(":");
+			sb.append(this.directory);
 		} else
 		{
 			sb.append(this.port);
@@ -77,7 +83,12 @@ public class Message implements Serializable
 		String[] pieces = raw.split(":");
 		MessageType t = MessageType.values()[Integer.parseInt(pieces[0])];
 		if (t == MessageType.OFFER)
-			return new Message(Long.parseLong(pieces[2]), pieces[3], UUID.fromString(pieces[1]));
+		{
+			Message m = new Message(Long.parseLong(pieces[2]), pieces[3], UUID.fromString(pieces[1]));
+			if( pieces.length >= 5 )
+				m.directory = Boolean.parseBoolean(pieces[4]);
+			return m;
+		}
 		return new Message(UUID.fromString(pieces[1]), Integer.parseInt(pieces[2]));
 	}
 
@@ -110,6 +121,11 @@ public class Message implements Serializable
 		if (this.type != MessageType.OFFER)
 			throw new RuntimeException("Not a OFFER message.");
 		return this.filesize;
+	}
+
+	public boolean isDirectory()
+	{
+		return this.directory;
 	}
 
 }

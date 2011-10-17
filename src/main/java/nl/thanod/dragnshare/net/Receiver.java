@@ -4,10 +4,12 @@ import java.io.*;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
+import java.util.zip.ZipFile;
+
+import nl.thanod.util.FileUtils;
 
 public class Receiver extends Thread
 {
@@ -53,48 +55,40 @@ public class Receiver extends Thread
 
 	public enum Status
 	{
-		STARTING, LISTENING, TRANSFERRING, COMPLETED, FAILED;
+		STARTING, LISTENING, TRANSFERRING, UNPACKING, COMPLETED, FAILED;
 	}
 
-	private final UUID messageid;
-	private final String filename;
-	private final long filesize;
+	private final Message message;
 	private final InetAddress addr;
 	private final MulticastShare parent;
 	private File target;
+	private File result;
 	private ServerSocket s;
 	private volatile Status currentStatus;
 	private final List<Listener> listeners;
 	private boolean started;
 
-	public Receiver(UUID messageid, String filename, long filesize, InetAddress addr, MulticastShare parent )
+	public Receiver( MulticastShare parent, Message message, InetAddress addr ) throws IOException
 	{
 		this.setDaemon(true);
+		this.message = message;
 		this.addr = addr;
 		this.parent = parent;
-		this.target = null;
-		this.messageid = messageid;
-		this.filename = filename;
-		this.filesize = filesize;
 		this.currentStatus = Status.STARTING;
 		this.listeners = Collections.synchronizedList(new ArrayList<Receiver.Listener>());
-		
+
+		this.target = FileUtils.createDragnShareFile(this.message.getFilename());
+		if( this.message.isDirectory() )
+		{
+			String name = this.message.getFilename();
+			name = name.substring(0, name.length()-4);
+			this.result = FileUtils.createDragnShareDir( name );
+		}
+		else
+			this.result = this.target;
 		this.started = false;
 
 		this.s = null;
-	}
-
-	public void connect() throws IOException
-	{
-		if (this.target == null)
-		{
-			File dir = File.createTempFile("dragnshare", "");
-			dir.delete();
-			dir.mkdirs();
-			this.target = new File(dir, this.filename);
-			this.target.createNewFile();
-		}
-		this.s = new ServerSocket(0, 1);
 	}
 	
 	@Override
@@ -103,10 +97,19 @@ public class Receiver extends Thread
 		if( this.started )
 			return;
 		this.started = true;
+
+		try
+		{
+			this.s = new ServerSocket(0, 1);
+		} catch (IOException e1)
+		{
+			e1.printStackTrace();
+			return;
+		}
 		super.start();
 		try
 		{
-			this.parent.send(new Message(this.messageid, this.getLocalPort()), this.addr);
+			this.parent.send(new Message(this.message.getID(), this.getLocalPort()), this.addr);
 		} catch(IOException e )
 		{
 			e.printStackTrace();
@@ -118,9 +121,12 @@ public class Receiver extends Thread
 	public void run()
 	{
 		if (this.s == null)
-			throw new RuntimeException("connect() before start()ing thread.");
+			throw new RuntimeException("no socket at run");
 		this.currentStatus = Status.LISTENING;
+		String filename = this.message.getFilename();
+		long filesize = this.message.getFilesize();
 		Socket client = null;
+		InputStream in = null;
 		OutputStream out = null;
 		try
 		{
@@ -128,12 +134,12 @@ public class Receiver extends Thread
 			long count = 0;
 			byte[] buffer = new byte[BUFFERSIZE + 1];
 			client = this.s.accept();
-			InputStream in = client.getInputStream();
+			in = client.getInputStream();
 			out = new FileOutputStream(this.target);
 
 			List<Listener> listeners = new ArrayList<Receiver.Listener>(this.listeners);
 			for (Listener listener:listeners)
-				listener.onStart(this.target, this.filename, this.filesize);
+				listener.onStart(this.result, filename, filesize);
 			
 			this.currentStatus = Status.TRANSFERRING;
 			do
@@ -147,28 +153,34 @@ public class Receiver extends Thread
 					// notify listeners of received content
 					listeners = new ArrayList<Receiver.Listener>(this.listeners);
 					for (Listener listener:listeners)
-						listener.onProgress(this.target, this.filename, this.filesize, count);
+						listener.onProgress(this.result, filename, filesize, count);
 				}
 			} while (n > 0 && !Thread.interrupted());
 
-			if (count != this.filesize)
-				throw new IOException("didn't receive enough bytes (expected "+this.filesize+" bytes, got "+count+").");
+			if (count != filesize)
+				throw new IOException("didn't receive enough bytes (expected "+filesize+" bytes, got "+count+").");
 
+			if( this.message.isDirectory() )
+			{
+				this.currentStatus = Status.UNPACKING;
+				unzip();
+			}
+			
 			this.currentStatus = Status.COMPLETED;
 
 			listeners = new ArrayList<Receiver.Listener>(this.listeners);
 			for (Listener listener:listeners)
-				listener.onCompleted(this.target, this.filename, this.filesize);
+				listener.onCompleted(this.result, filename, filesize);
 
 		} catch (IOException e)
 		{
+			e.printStackTrace();
 			this.currentStatus = Status.FAILED;
-			
+
 			List<Listener> listeners = new ArrayList<Receiver.Listener>(this.listeners);
 			for (Listener listener:listeners)
-				listener.onError(this.target, this.filename, this.filesize, e);
+				listener.onError(this.result, filename, filesize, e);
 					
-			e.printStackTrace();
 		} finally
 		{
 			try
@@ -186,6 +198,47 @@ public class Receiver extends Thread
 			{
 
 			}
+		}
+	}
+
+	private void unzip() throws ZipException, IOException, FileNotFoundException
+	{
+		int n;
+		InputStream in = null;
+		OutputStream out = null;
+		byte[] buffer = new byte[BUFFERSIZE + 1];
+		ZipFile zip = new ZipFile(this.target);
+		try
+		{
+			Enumeration<? extends ZipEntry> entries = zip.entries();
+	
+			while(entries.hasMoreElements())
+			{
+				ZipEntry entry = entries.nextElement();
+	
+				try
+				{
+					in = zip.getInputStream(entry);
+					File f = new File( this.result.getParentFile(), entry.getName() );
+					f.getParentFile().mkdirs();
+					f.createNewFile();
+					out = new FileOutputStream(f);
+					do
+					{
+						n = in.read(buffer, 0, BUFFERSIZE);
+						if (n > 0)
+							out.write(buffer, 0, n);
+					} while (n > 0 && !Thread.interrupted());
+				} finally {
+					if( in != null )
+						in.close();
+					if( out != null )
+						out.close();
+				}
+			}
+		} finally
+		{
+			zip.close();
 		}
 	}
 
@@ -219,19 +272,19 @@ public class Receiver extends Thread
 	
 	public UUID getMessageID()
 	{
-		return this.messageid;
+		return this.message.getID();
 	}
 
 	public File getTarget() {
-		return this.target;
+		return this.result;
 	}
 
 	public String getFilename() {
-		return this.filename;
+		return this.message.getFilename();
 	}
 
 	public long getFilesize() {
-		return this.filesize;
+		return this.message.getFilesize();
 	}
 	
 	public boolean isStarted()
