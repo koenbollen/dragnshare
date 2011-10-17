@@ -62,10 +62,6 @@ public class SettingsPane extends JFrame
 	{
 		JPanel p = new JPanel(new FlowLayout(FlowLayout.LEADING));
 
-		// JTextArea groupKey = new JTextArea("<group key>");
-		// groupKey.setEditable(false); // TODO: Enable when implemented.
-		// p.add( groupKey );
-
 		String msg = "Show a notification message when a file is received.";
 		final JCheckBox showNotify = new JCheckBox(msg);
 		showNotify.setSelected(Settings.instance.getBool("showNotifications", true));
@@ -97,7 +93,7 @@ public class SettingsPane extends JFrame
 	{
 		JPanel p = new JPanel(new FlowLayout(FlowLayout.LEADING));
 
-		final JLabel t1 = new JLabel("Automaticly download file smaller the ");
+		final JLabel t1 = new JLabel("Automatically download files smaller then ");
 		p.add(t1);
 		final JTextField adl = new JTextField(Integer.toString(Settings.instance.getInt("automaticDownloadLimit", 100)));
 		adl.setPreferredSize(new Dimension(70, 25));
@@ -115,17 +111,18 @@ public class SettingsPane extends JFrame
 			@Override
 			public void caretUpdate(CaretEvent e)
 			{
+				int i = 0;
 				try
 				{
-					Settings.instance.setInt("automaticDownloadLimit", Integer.parseInt(adl.getText()));
+					i = Integer.parseInt(adl.getText());
 				} catch( NumberFormatException n )
 				{
-					adl.setText(Integer.toString(Settings.instance.getInt("automaticDownloadLimit", 100)));
 				}
+				Settings.instance.setInt("automaticDownloadLimit", i);
 			}
 		});
 		p.add(adl);
-		final JLabel t2 = new JLabel(" MB. (0 = disabled)");
+		final JLabel t2 = new JLabel(" MB.  (0 = no check)");
 		p.add(t2);
 
 		final JCheckBox bruteForceDiscover = new JCheckBox("Use a blunt technique to boardcast files shared across the network.");

@@ -140,7 +140,7 @@ public class MulticastShare extends Thread
 				if (this.files.containsKey(m.getID()))
 					break;
 				long limit = Settings.instance.getInt("automaticDownloadLimit", 100) * 1024 * 1024;
-				if( m.getFilesize() > limit )
+				if( limit != 0 && m.getFilesize() > limit )
 				{
 					AvailableFile info = new AvailableFile(m, packet.getAddress() );
 					this.available.put( m.getID(), info );
@@ -187,12 +187,11 @@ public class MulticastShare extends Thread
 
 	public void send(Message m) throws IOException
 	{
+		byte[] bytes = m.toString().getBytes();
+		DatagramPacket packet = new DatagramPacket(bytes, bytes.length, null, MULTICASTPORT);
 		if( Settings.instance.getBool("bruteForceDiscover" ))
 		{
 			// TODO: Thread this? Or thread at a higher level when share( is called?
-			byte[] bytes = m.toString().getBytes();
-			DatagramPacket packet = new DatagramPacket(bytes, bytes.length, null, MULTICASTPORT);
-			
 			for (NetworkInterface dev : Collections.list(NetworkInterface.getNetworkInterfaces()) ) {
 				if(dev.isLoopback() || !dev.isUp())
 					continue;
@@ -216,8 +215,7 @@ public class MulticastShare extends Thread
 		}
 		else
 		{
-			byte[] bytes = m.toString().getBytes();
-			DatagramPacket packet = new DatagramPacket(bytes, bytes.length, this.group, MULTICASTPORT);
+			packet.setAddress(this.group);
 			this.multisocket.send(packet);
 		}
 	}
