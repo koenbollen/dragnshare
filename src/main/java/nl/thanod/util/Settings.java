@@ -1,6 +1,8 @@
 package nl.thanod.util;
 
+import java.awt.Dimension;
 import java.awt.Point;
+import java.awt.Toolkit;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -146,6 +148,9 @@ public class Settings extends Properties
 	}
 	public void setLocation( Point p )
 	{
+		Dimension size = Toolkit.getDefaultToolkit().getScreenSize();
+		p.x = (p.x + (size.width * 10)) % size.width;
+		p.y = (p.y + (size.height * 10)) % size.height;
 		this.setProperty("location_x", Integer.toString(p.x));
 		this.setProperty("location_y", Integer.toString(p.y));
 	}

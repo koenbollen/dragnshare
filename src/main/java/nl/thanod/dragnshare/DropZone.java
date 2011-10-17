@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 
 import nl.thanod.dragnshare.net.MulticastShare;
@@ -48,6 +49,13 @@ public class DropZone extends JDialog implements MulticastShare.Listener {
 	
 	public DropZone() {
 		super((Frame) null, "Drag'n Share");
+		try
+		{
+			this.setIconImage(ImageIO.read(DropZone.class.getClassLoader().getResource("dragn-logo.png")));
+		} catch (Exception e1)
+		{
+			e1.printStackTrace();
+		}
 
 		Notifier.Factory.dropZone = this;
 
