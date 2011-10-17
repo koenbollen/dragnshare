@@ -62,6 +62,8 @@ public class ShareInfo extends JPanel implements ListViewable, Observer {
 		super(new BorderLayout());
 		setBorder(NONFOCUSED);
 		
+		sf.setView(this);
+		
 		this.coloredComponents.add(this);
 		
 		this.container = new JPanel(new BorderLayout());
@@ -240,5 +242,11 @@ public class ShareInfo extends JPanel implements ListViewable, Observer {
 		
 		this.status.setText(this.sf.getStatus());
 		updateView();
+	}
+
+	public void remove()
+	{
+		if (ShareInfo.this.monitor != null)
+			ShareInfo.this.monitor.onRemove(ShareInfo.this);
 	}
 }

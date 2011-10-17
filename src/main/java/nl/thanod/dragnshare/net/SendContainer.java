@@ -4,13 +4,16 @@
 package nl.thanod.dragnshare.net;
 
 import java.io.File;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Observable;
+import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import nl.thanod.dragnshare.ColorScheme;
+import nl.thanod.dragnshare.DropZone;
+import nl.thanod.dragnshare.ShareInfo;
 import nl.thanod.dragnshare.SharedFile;
+import nl.thanod.util.Settings;
 
 /**
  * @author nilsdijk
@@ -21,8 +24,12 @@ public class SendContainer extends Observable implements SharedFile, MulticastSh
 	private final File file;
 	private final List<Sender> sender = Collections.synchronizedList(new LinkedList<Sender>());
 	private MulticastShare share;
-	
-	public SendContainer(MulticastShare share, File file){
+	protected ScheduledFuture<Void> canceller;
+	protected ShareInfo view;
+	private UUID id;
+
+	public SendContainer(MulticastShare share, File file, UUID id){
+		this.id = id;
 		this.file = file;
 		this.share = share;
 		this.share.addMulticastListener(this);
@@ -76,6 +83,10 @@ public class SendContainer extends Observable implements SharedFile, MulticastSh
 		for (Sender sender:this.sender)
 			sender.interrupt();
 		this.sender.clear();
+		if( this.id == null )
+			this.share.cancel(this.file);
+		else
+			this.share.cancel(this.id);
 		this.share.removeMulticastListener(this);
 	}
 
@@ -113,10 +124,16 @@ public class SendContainer extends Observable implements SharedFile, MulticastSh
 	 * @see nl.thanod.dragnshare.net.MulticastShare.Listener#onSending(nl.thanod.dragnshare.net.Sender)
 	 */
 	@Override
-	public void onSending(Sender sender) {
+	public synchronized void onSending(Sender sender) {
 		if (!sender.getFile().equals(this.file))
 			return;
 		this.sender.add(sender);
+		
+		if( this.canceller != null )
+		{
+			this.canceller.cancel(true);
+			this.canceller = null;
+		}
 		
 		setChanged();
 		notifyObservers();
@@ -126,13 +143,44 @@ public class SendContainer extends Observable implements SharedFile, MulticastSh
 	 * @see nl.thanod.dragnshare.net.MulticastShare.Listener#onSent(nl.thanod.dragnshare.net.Sender)
 	 */
 	@Override
-	public void onSent(Sender sender) {
+	public synchronized void onSent(Sender sender) {
 		if (!sender.getFile().equals(this.file))
 			return;
 		this.sender.remove(sender);
+		
+		if( this.sender.size() == 0 && Settings.instance.getBool("autoClear") )
+		{
+			if( this.canceller != null )
+				this.canceller.cancel(true);
+			
+			this.canceller = DropZone.executor.schedule(new Callable<Void>() {
+				@Override
+				public Void call() throws Exception
+				{
+					if( SendContainer.this.view != null )
+						SendContainer.this.view.remove();
+					return null;
+				}
+			}, 10, TimeUnit.SECONDS);
+		}
 		
 		setChanged();
 		notifyObservers();
 	}
 
+	@Override
+	public void setView(ShareInfo view)
+	{
+		this.view = view;
+	}
+
+	public UUID getID()
+	{
+		return this.id;
+	}
+
+	public void setID(UUID id)
+	{
+		this.id = id;
+	}
 }

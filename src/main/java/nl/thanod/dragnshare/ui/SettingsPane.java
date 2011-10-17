@@ -5,9 +5,7 @@ import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.*;
-import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -87,6 +85,18 @@ public class SettingsPane extends JFrame
 	{
 		JPanel p = new JPanel(new FlowLayout(FlowLayout.LEADING));
 
+		
+		final JCheckBox quitconf = new JCheckBox("Confirm before quitting Drag'n Share.");
+		quitconf.setSelected(Settings.instance.getBool("confirmQuit", true));
+		quitconf.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				Settings.instance.setBool("confirmQuit", quitconf.isSelected());
+			}
+		});
+		p.add(quitconf);
+
 		String msg = "Show a notification message when a file is received.";
 		final JCheckBox showNotify = new JCheckBox(msg);
 		showNotify.setSelected(Settings.instance.getBool("showNotifications", true));
@@ -109,6 +119,17 @@ public class SettingsPane extends JFrame
 			}
 		});
 		p.add(hideDropZone);
+		
+		final JCheckBox autoClear = new JCheckBox("Automatically clear shared files 10 seconds after completion.");
+		autoClear.setSelected(Settings.instance.getBool("autoClear"));
+		autoClear.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				Settings.instance.setBool("autoClear", autoClear.isSelected());
+			}
+		});
+		p.add(autoClear);
 
 		tabs.addTab("General", p);
 		this.panes.put("general", p);

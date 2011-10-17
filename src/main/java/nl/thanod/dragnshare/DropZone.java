@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import javax.swing.*;
 
@@ -43,6 +44,8 @@ public class DropZone extends JDialog implements MulticastShare.Listener {
 	
 	protected volatile boolean dragging = false;
 
+	public final static ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1);
+	
 	public DropZone() {
 		super((Frame) null, "Drag'n Share");
 
@@ -174,6 +177,8 @@ public class DropZone extends JDialog implements MulticastShare.Listener {
 					@Override
 					public void run()
 					{
+						if( !Settings.instance.getBool("confirmQuit", true) )
+							System.exit(0);
 						int r = JOptionPane.showConfirmDialog(DropZone.this, "Are you sure you want to quit?", "Drag'n Quit", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 						if( r == JOptionPane.YES_OPTION )
 							System.exit(0);	
@@ -310,7 +315,7 @@ public class DropZone extends JDialog implements MulticastShare.Listener {
 		});
 		
 		if (shared.shouldStart())
-			Notifier.Factory.notify(Type.RECEIVED, "Big file", "The file " + shared.getName() + " is offerd but exeeded the size for automatic download.");
+			Notifier.Factory.notify(Type.RECEIVED, "Large file availabl", "The file " + shared.getName() + " is offered but exceeded the filesize for automatic download.");
 	}
 
 	/*
@@ -326,7 +331,7 @@ public class DropZone extends JDialog implements MulticastShare.Listener {
 			if( !receiver.isStarted() )
 				this.tray.setDecorator("accept", true);
 		}
-		addSharedFile(new ReceivedSharedFile(receiver));
+		addSharedFile(new ReceivedSharedFile(this,receiver));
 	}
 
 	@Override

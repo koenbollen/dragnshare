@@ -27,11 +27,13 @@ public class ReceivedSharedFile extends Observable implements SharedFile, Receiv
 	private long speedHist = 0;
 	private String remain = "";
 	private String error = null;
+	private final DropZone dropzone;
 
 	/**
 	 * @param receiver
 	 */
-	public ReceivedSharedFile(Receiver receiver) {
+	public ReceivedSharedFile(DropZone dropzone, Receiver receiver) {
+		this.dropzone = dropzone;
 		this.receiver = receiver;
 		this.receiver.addCompletionListener(this);
 
@@ -113,7 +115,8 @@ public class ReceivedSharedFile extends Observable implements SharedFile, Receiv
 	@Override
 	public void onCompleted(File result, String filename, long filesize) {
 		Notifier.Factory.notify(Notifier.Type.RECEIVED, "Received", "You received " + result.getName());
-		Tray.findTray().setDecorator("add");
+		if (!this.dropzone.isFocused())
+			this.dropzone.tray.setDecorator("add");
 		this.updateProgress(1f);
 	}
 
@@ -209,5 +212,12 @@ public class ReceivedSharedFile extends Observable implements SharedFile, Receiv
 		if (this.getProgress() < 1f)
 			return "downloading " + this.speed + this.remain;
 		return "done";
+	}
+
+	@Override
+	public void setView(ShareInfo view)
+	{
+		// TODO Auto-generated method stub
+		
 	}
 }

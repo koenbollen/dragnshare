@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.*;
 import java.util.*;
+import java.util.Map.Entry;
 
 import nl.thanod.util.Settings;
 import nl.thanod.util.Zipper;
@@ -159,32 +160,35 @@ public class MulticastShare extends Thread
 	{
 		if( file.isDirectory() )
 		{
+			final SendContainer res = new SendContainer(this, file, null);
 			Zipper z = new Zipper(file);
 			z.addListener(new Zipper.Listener() {
 				@Override
 				public void finished(File directory, File zipfile)
 				{
-					MulticastShare.this.doShare(zipfile, true);
+					UUID id = MulticastShare.this.doShare(zipfile, true);
+					res.setID(id);
 				}
 			});
-		} else {
-			this.doShare(file, false);
-		}
-		return new SendContainer(this, file);
+			return res;
+		} 
+		UUID id = this.doShare(file, false);
+		return new SendContainer(this, file, id);
 	}
 	
-	protected void doShare(File file, boolean dir)
+	protected UUID doShare(File file, boolean dir)
 	{
 		try
 		{
 			Message m = new Message(file, dir);
 			this.files.put(m.getID(), file);
 			this.send(m);
+			return m.getID();
 		} catch (IOException e)
 		{
 			e.printStackTrace();
 		}
-
+		return null;
 	}
 	
 	public void addMulticastListener(Listener listener){
@@ -232,5 +236,24 @@ public class MulticastShare extends Thread
 		dragnshare.start();
 		for (String s : args)
 			dragnshare.share(new File(s));
+	}
+
+	public void cancel(File file)
+	{
+		if( this.files.containsValue(file) )
+		{
+			Iterator<Entry<UUID, File>> it = this.files.entrySet().iterator();
+			while(it.hasNext())
+			{
+				Entry<UUID, File> e = it.next();
+				if( e.getValue().equals(file) )
+					it.remove();
+			}
+		}
+	}
+
+	public void cancel(UUID id)
+	{
+		this.files.remove(id);
 	}
 }

@@ -29,4 +29,6 @@ public interface SharedFile {
 	void start();
 	
 	String getStatus();
+	
+	void setView( ShareInfo view );
 }
