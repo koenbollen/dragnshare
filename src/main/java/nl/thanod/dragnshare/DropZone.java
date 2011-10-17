@@ -19,6 +19,7 @@ import nl.thanod.dragnshare.net.Receiver;
 import nl.thanod.dragnshare.net.Sender;
 import nl.thanod.dragnshare.notify.Notifier;
 import nl.thanod.dragnshare.ui.InteractiveList;
+import nl.thanod.dragnshare.ui.InteractiveListModel;
 import nl.thanod.dragnshare.ui.TopLineBorder;
 import nl.thanod.dragnshare.ui.Tray;
 import nl.thanod.util.ScreenInfo;
@@ -90,22 +91,27 @@ public class DropZone extends JDialog implements MulticastShare.Listener {
 		this.list.addKeyListener(new KeyListener() {
 			
 			@Override
-			public void keyTyped(KeyEvent paramKeyEvent) {
-				// TODO Auto-generated method stub
-				
-			}
+			public void keyTyped(KeyEvent paramKeyEvent) {}
 			
 			@Override
-			public void keyReleased(KeyEvent paramKeyEvent) {
-				// TODO Auto-generated method stub
-				
-			}
+			public void keyReleased(KeyEvent paramKeyEvent) {}
 			
 			@Override
 			public void keyPressed(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_DELETE){
 					DropZone.this.list.getModel().removeAll(DropZone.this.list.getSelector().getSelected());
 				}
+			}
+		});
+
+		this.list.getModel().addListener(new InteractiveListModel.Listener<ShareInfo>(){
+
+			@Override
+			public void addedToModel(int index, ShareInfo e) {}
+
+			@Override
+			public void removedFromModel(int index, ShareInfo e) {
+				e.getSharedFile().remove();
 			}
 		});
 
@@ -187,9 +193,7 @@ public class DropZone extends JDialog implements MulticastShare.Listener {
 		this.clearall.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent paramActionEvent) {
-				List<ShareInfo> l = DropZone.this.list.getModel().getElements();
-				for (ShareInfo si : l)
-					si.removeFromList();
+				DropZone.this.list.getModel().removeAll(DropZone.this.list.getModel().getElements());
 			}
 		});
 
@@ -306,7 +310,6 @@ public class DropZone extends JDialog implements MulticastShare.Listener {
 			@Override
 			public void onRemove(ShareInfo info) {
 				DropZone.this.list.getModel().remove(info);
-				info.getSharedFile().remove();
 			}
 		});
 	}

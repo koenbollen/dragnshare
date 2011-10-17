@@ -227,13 +227,14 @@ public class ShareInfo extends JPanel implements ListViewable, Observer {
 	 */
 	@Override
 	public void update(Observable paramObservable, Object paramObject) {
-		if (this.sf.getProgress() < 1f){
+		float p = this.sf.getProgress();
+		if (p > 0f && p < 1f){
 			if (this.progress == null){
 				this.progress = new JProgressBar(0,100);
 				this.container.add(this.progress);
 				this.container.revalidate();
 			}
-			this.progress.setValue((int)(100*this.sf.getProgress()));
+			this.progress.setValue((int)(100*p));
 		} else {
 			if (this.progress != null){
 				this.container.remove(this.progress);
