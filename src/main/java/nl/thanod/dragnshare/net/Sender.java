@@ -11,7 +11,7 @@ import java.net.Socket;
 public class Sender extends Thread
 {
 
-	public static final int BUFFERSIZE = 4096;
+	public static final int BUFFERSIZE = Receiver.BUFFERSIZE;
 
 	private final MulticastShare sharer;
 	private final File file;

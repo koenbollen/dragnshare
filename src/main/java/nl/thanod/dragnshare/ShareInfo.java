@@ -129,7 +129,7 @@ public class ShareInfo extends JPanel implements ListViewable, Observer {
 	 * @param name
 	 * @return
 	 */
-	private static Icon getIcon(String name) {
+	public static Icon getIcon(String name) {
 		try {
 			return new ImageIcon(ShareInfo.class.getClassLoader().getResource(name));
 		} catch (Throwable ball) {

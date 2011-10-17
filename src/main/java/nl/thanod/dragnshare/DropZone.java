@@ -19,10 +19,7 @@ import nl.thanod.dragnshare.net.Receiver;
 import nl.thanod.dragnshare.net.Sender;
 import nl.thanod.dragnshare.notify.Notifier;
 import nl.thanod.dragnshare.notify.Notifier.Type;
-import nl.thanod.dragnshare.ui.InteractiveList;
-import nl.thanod.dragnshare.ui.InteractiveListModel;
-import nl.thanod.dragnshare.ui.TopLineBorder;
-import nl.thanod.dragnshare.ui.Tray;
+import nl.thanod.dragnshare.ui.*;
 import nl.thanod.util.ScreenInfo;
 import nl.thanod.util.Settings;
 
@@ -188,18 +185,52 @@ public class DropZone extends JDialog implements MulticastShare.Listener {
 		JScrollPane jsp = new JScrollPane(this.list, ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		jsp.setBorder(null);
 
-		FlowLayout fl;
-		JPanel buttons = new JPanel(fl = new FlowLayout(FlowLayout.TRAILING));
+		BorderLayout fl;
+		JPanel buttons = new JPanel(fl = new BorderLayout());
 		buttons.setBackground(Color.WHITE);
 		fl.setVgap(2);
 		buttons.setBorder(new TopLineBorder(Color.LIGHT_GRAY));
-		buttons.add(this.clearall = new JButton("clear all"));
+		buttons.add(this.clearall = new JButton("clear all"), BorderLayout.EAST);
 		this.clearall.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent paramActionEvent) {
 				DropZone.this.list.getModel().removeAll(DropZone.this.list.getModel().getElements());
 			}
 		});
+		
+		JPanel quitpref = new JPanel(new FlowLayout(FlowLayout.LEADING));
+		final JLabel quit;
+		quitpref.add(quit = new JLabel(ShareInfo.getIcon("stop.png")));
+		quit.setBackground(Color.WHITE);
+		quit.setToolTipText("Quit Drag'n Share");
+		quit.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e)
+			{
+				SwingUtilities.invokeLater(new Runnable() {
+					@Override
+					public void run()
+					{
+						int r = JOptionPane.showConfirmDialog(DropZone.this, "Are you sure you want to quit?", "Drag'n Quit", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+						if( r == JOptionPane.YES_OPTION )
+							System.exit(0);	
+					}
+				});
+			}
+		});
+		final JLabel pref;
+		quitpref.add(pref = new JLabel(ShareInfo.getIcon("pref.png")));
+		pref.setToolTipText("Preferences");
+		pref.setBackground(Color.WHITE);
+		pref.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e)
+			{
+				new SettingsPane().setVisible(true);
+			}
+		});
+		quitpref.setBackground(Color.WHITE);
+		buttons.add( quitpref, BorderLayout.WEST);
 
 		JPanel container = new JPanel(new BorderLayout());
 		container.add(jsp, BorderLayout.CENTER);
@@ -283,26 +314,17 @@ public class DropZone extends JDialog implements MulticastShare.Listener {
 			}
 		});
 		
-		this.tray.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent paramActionEvent) {
-				System.err.println(paramActionEvent);
-			}
-		});
 		this.tray.addMouseListener(new MouseAdapter() {
 			
 			@Override
 			public void mousePressed(MouseEvent e) {
-				if (e.getButton() == MouseEvent.BUTTON1) {
-					if (!DropZone.this.isVisible()) {
-						Dimension size = DropZone.this.getSize();
-						Point p = Settings.instance.getLocation();
-						if (p != null && ScreenInfo.intersects(new Rectangle(p, size)))
-							DropZone.this.setLocation(p);
-					}
-					DropZone.this.setVisible(!DropZone.this.isVisible());
+				if (!DropZone.this.isVisible()) {
+					Dimension size = DropZone.this.getSize();
+					Point p = Settings.instance.getLocation();
+					if (p != null && ScreenInfo.intersects(new Rectangle(p, size)))
+						DropZone.this.setLocation(p);
 				}
+				DropZone.this.setVisible(!DropZone.this.isVisible());
 			}
 		});
 	}

@@ -33,7 +33,6 @@ public class Tray extends TrayIcon implements Runnable
 		
 		this.setImageAutoSize(false);
 		this.setToolTip("Drag'n Share (click to open DropZone)");
-		this.setPopupMenu(new TrayMenu(null));
 		
 		this.base = (BufferedImage)this.getImage();
 		this.images = new HashMap<String, BufferedImage>();

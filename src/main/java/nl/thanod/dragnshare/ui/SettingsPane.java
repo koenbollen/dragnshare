@@ -1,12 +1,13 @@
 package nl.thanod.dragnshare.ui;
 
 import java.awt.BorderLayout;
+import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
+import java.awt.event.*;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,6 +15,7 @@ import javax.swing.*;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 
+import nl.thanod.dragnshare.ShareInfo;
 import nl.thanod.util.Settings;
 
 public class SettingsPane extends JFrame
@@ -24,7 +26,7 @@ public class SettingsPane extends JFrame
 
 	public SettingsPane()
 	{
-		super("Drag'n Share - Settings");
+		super("Drag'n Share - Preferences");
 		
 		setLayout(new BorderLayout());
 		setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
@@ -38,10 +40,32 @@ public class SettingsPane extends JFrame
 
 		this.add(tabs, BorderLayout.CENTER);
 		
+		
+		JPanel buttons = new JPanel( new BorderLayout() );
+		JLabel about = new JLabel(ShareInfo.getIcon("help.png"));
+		about.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e)
+			{
+				if( Desktop.isDesktopSupported() )
+				{
+					try
+					{
+						Desktop.getDesktop().browse( new URI( "http://koenbollen.github.com/dragnshare" ) );
+					} catch (Exception ball)
+					{
+						ball.printStackTrace();
+					}
+				}
+			}
+		});
+		about.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
+		buttons.add( about, BorderLayout.WEST );
+		
 		FlowLayout l = new FlowLayout(FlowLayout.TRAILING);
 		l.setHgap(30);
 		l.setVgap(20);
-		JPanel buttons = new JPanel(l);
+		JPanel closepane = new JPanel(l);
 		JButton close = new JButton("Close");
 		close.addActionListener(new ActionListener() {
 			
@@ -52,7 +76,8 @@ public class SettingsPane extends JFrame
 				Settings.instance.store();
 			}
 		});
-		buttons.add( close );
+		closepane.add( close );
+		buttons.add( closepane, BorderLayout.EAST );
 		
 		this.add(buttons, BorderLayout.SOUTH);
 		this.pack();
