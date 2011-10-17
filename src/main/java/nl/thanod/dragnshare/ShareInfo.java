@@ -9,7 +9,6 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Observable;
@@ -24,7 +23,7 @@ import nl.thanod.dragnshare.ui.InteractiveList.ListViewable;
 /**
  * @author nilsdijk
  */
-public class ShareInfo extends JPanel implements ListViewable {
+public class ShareInfo extends JPanel implements ListViewable, Observer {
 
 	public interface Monitor {
 		void onRemove(ShareInfo info);
@@ -53,6 +52,8 @@ public class ShareInfo extends JPanel implements ListViewable {
 	private List<JComponent> coloredComponents = new ArrayList<JComponent>();
 
 	private Monitor monitor;
+	private JProgressBar progress;
+	private JPanel container;
 
 	public ShareInfo(SharedFile sf) {
 		super(new BorderLayout());
@@ -60,38 +61,28 @@ public class ShareInfo extends JPanel implements ListViewable {
 		
 		this.coloredComponents.add(this);
 		
-		JPanel container = new JPanel(new BorderLayout());
+		this.container = new JPanel(new BorderLayout());
 		this.coloredComponents.add(container);
 
 		this.sf = sf;
 		this.setPreferredSize(new Dimension(0, 50));
 
 		Icon icon = chooser.getIcon(sf.getFile());
-		container.add(this.label = new JLabel(sf.getName()), BorderLayout.NORTH);
+		this.container.add(this.label = new JLabel(sf.getName()), BorderLayout.NORTH);
 		this.label.setIcon(icon);
 
 		if (sf instanceof Observable) {
-			final JProgressBar prog;
-			container.add(prog = new JProgressBar(0, 100), BorderLayout.CENTER);
-			((Observable) sf).addObserver(new Observer() {
-				@Override
-				public void update(Observable paramObservable, Object paramObject) {
-					prog.setValue((int) (ShareInfo.this.sf.getProgress() * 100));
-					if (ShareInfo.this.sf.getProgress() == 1f)
-						ShareInfo.this.remove(prog);
-					ShareInfo.this.updateView();
-				}
-			});
+			((Observable)sf).addObserver(this);
 		}
-		container.add(this.status = new JLabel("status here"), BorderLayout.SOUTH);
+		
+		container.add(this.status = new JLabel(this.sf.getStatus()), BorderLayout.SOUTH);
 		this.status.setForeground(Color.LIGHT_GRAY);
 		this.status.setBorder(BorderFactory.createEmptyBorder(0, icon.getIconWidth() + 4, 0, 0));
 
 		int vgap = ((this.getPreferredSize().height - icon.getIconHeight()) / 2 ) -1 ;
-		JPanel buttons = new JPanel(new FlowLayout(FlowLayout.LEADING, 2, vgap));
+		final JPanel buttons = new JPanel(new FlowLayout(FlowLayout.LEADING, 2, vgap));
 		this.coloredComponents.add(buttons);
 		buttons.add(this.close = new JLabel(getIcon("cancel.png")));
-		resizeLabel(this.close);
 		this.coloredComponents.add(this.close);
 		this.close.addMouseListener(new MouseAdapter() {
 			@Override
@@ -102,46 +93,37 @@ public class ShareInfo extends JPanel implements ListViewable {
 				e.consume();
 			}
 		});
-
-		if (sf.canSave()) {
-			final JLabel save;
-			buttons.add(save = new JLabel(getIcon("disk.png")));
-			resizeLabel(save);
-			this.coloredComponents.add(save);
-			save.addMouseListener(new MouseAdapter() {
-				/*
-				 * (non-Javadoc)
-				 * @see java.awt.event.MouseAdapter#mouseClicked(java.awt.event.
-				 * MouseEvent)
+		
+		if (sf.shouldStart()){
+			final JLabel start = new JLabel(getIcon("accept.png"));
+			this.coloredComponents.add(start);
+			buttons.add(start);
+			start.addMouseListener(new MouseAdapter() {
+				/* (non-Javadoc)
+				 * @see java.awt.event.MouseAdapter#mouseClicked(java.awt.event.MouseEvent)
 				 */
 				@Override
 				public void mouseClicked(MouseEvent e) {
 					if (e.getClickCount() != 1 || e.getButton() != MouseEvent.BUTTON1)
 						return;
-					if (!ShareInfo.this.sf.isReady())
-						return;
+					ShareInfo.this.sf.start();
+					SwingUtilities.invokeLater(new Runnable() {
+						
+						@Override
+						public void run() {
+							buttons.remove(start);
+							buttons.revalidate();
+						}
+					});
 					e.consume();
-					chooser.setSelectedFile(new File(ShareInfo.this.sf.getFile().getName()));
-					if (chooser.showSaveDialog(ShareInfo.this) == JFileChooser.APPROVE_OPTION) {
-						File f = chooser.getSelectedFile();
-						ShareInfo.this.sf.getFile().renameTo(f);
-						removeFromList();
-					}
-
 				}
 			});
 		}
+
 		this.add(container, BorderLayout.CENTER);
 		this.add(buttons, BorderLayout.EAST);
 
 		updateView();
-	}
-
-	/**
-	 * @param close2
-	 */
-	private static void resizeLabel(JLabel l) {
-		l.setPreferredSize(new Dimension(l.getIcon().getIconWidth(), l.getIcon().getIconHeight()));
 	}
 
 	/**
@@ -235,5 +217,29 @@ public class ShareInfo extends JPanel implements ListViewable {
 	 */
 	public void setMonitor(Monitor monitor) {
 		this.monitor = monitor;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.util.Observer#update(java.util.Observable, java.lang.Object)
+	 */
+	@Override
+	public void update(Observable paramObservable, Object paramObject) {
+		if (this.sf.getProgress() < 1f){
+			if (this.progress == null){
+				this.progress = new JProgressBar(0,100);
+				this.container.add(this.progress);
+				this.container.revalidate();
+			}
+			this.progress.setValue((int)(100*this.sf.getProgress()));
+		} else {
+			if (this.progress != null){
+				this.container.remove(this.progress);
+				this.progress = null;
+				this.container.revalidate();
+			}
+		}
+		
+		this.status.setText(this.sf.getStatus());
+		updateView();
 	}
 }

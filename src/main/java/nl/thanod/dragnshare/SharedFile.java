@@ -24,5 +24,9 @@ public interface SharedFile {
 	
 	void remove();
 	
-	boolean canSave();
+	boolean shouldStart();
+	
+	void start();
+	
+	String getStatus();
 }

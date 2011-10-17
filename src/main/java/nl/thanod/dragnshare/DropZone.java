@@ -14,7 +14,6 @@ import java.util.List;
 
 import javax.swing.*;
 
-import nl.thanod.DebugUtil;
 import nl.thanod.dragnshare.net.MulticastShare;
 import nl.thanod.dragnshare.net.Receiver;
 import nl.thanod.dragnshare.net.Sender;
@@ -155,8 +154,16 @@ public class DropZone extends JDialog implements MulticastShare.Listener {
 						}
 
 						@Override
-						public boolean canSave() {
+						public boolean shouldStart() {
 							return false;
+						}
+
+						@Override
+						public void start() {}
+
+						@Override
+						public String getStatus() {
+							return "sharing ...";
 						}
 					});
 				}
@@ -317,7 +324,7 @@ public class DropZone extends JDialog implements MulticastShare.Listener {
 		addSharedFile(new ReceivedSharedFile(receiver));
 		
 		// TODO: Wait for button press:
-		receiver.start();
+		//receiver.start();
 	}
 
 	@Override
@@ -340,5 +347,4 @@ public class DropZone extends JDialog implements MulticastShare.Listener {
 
 		new DropZone();
 	}
-
 }

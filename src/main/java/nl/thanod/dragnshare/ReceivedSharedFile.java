@@ -149,10 +149,32 @@ public class ReceivedSharedFile extends Observable implements SharedFile, Receiv
 	}
 
 	/* (non-Javadoc)
-	 * @see nl.thanod.dragnshare.SharedFile#canSave()
+	 * @see nl.thanod.dragnshare.SharedFile#shouldStart()
 	 */
 	@Override
-	public boolean canSave() {
-		return true;
+	public boolean shouldStart() {
+		return !this.receiver.isStarted();
+	}
+
+	/* (non-Javadoc)
+	 * @see nl.thanod.dragnshare.SharedFile#start()
+	 */
+	@Override
+	public void start() {
+		this.receiver.start();
+		setChanged();
+		notifyObservers();
+	}
+
+	/* (non-Javadoc)
+	 * @see nl.thanod.dragnshare.SharedFile#getStatus()
+	 */
+	@Override
+	public String getStatus() {
+		if (!this.receiver.isStarted())
+			return "waiting for accept";
+		if (this.getProgress() < 1f)
+			return "downloading";
+		return "done";
 	}
 }
