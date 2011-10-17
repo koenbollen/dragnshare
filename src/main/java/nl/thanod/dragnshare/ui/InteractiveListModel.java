@@ -103,10 +103,17 @@ public class InteractiveListModel<E> {
 	}
 	
 	public E elementAt(int index){
-		return this.elementAt(index);
+		return this.elements.get(index);
 	}
 	
 	public List<E> getElements(){
 		return new ArrayList<E>(this.elements);
+	}
+
+	/**
+	 * @return
+	 */
+	public int elementCount() {
+		return this.elements.size();
 	}
 }

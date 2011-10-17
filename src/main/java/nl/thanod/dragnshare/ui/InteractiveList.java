@@ -40,6 +40,8 @@ public class InteractiveList<E extends ListViewable> extends JPanel implements I
 
 	public InteractiveList() {
 		super(new BorderLayout());
+		
+		setFocusable(true);
 		this.model = new InteractiveListModel<E>();
 		this.model.addListener(this);
 
@@ -59,11 +61,17 @@ public class InteractiveList<E extends ListViewable> extends JPanel implements I
 	}
 
 	public void setSelector(InteractiveListSelector<E> selector) {
-		if (this.selector != null)
+		if (this.selector != null){
 			this.removeMouseListener(this.selector);
+			this.removeFocusListener(this.selector);
+			this.removeKeyListener(this.selector);
+		}
 		this.selector = selector;
 		this.selector.initialize(this);
-		this.addMouseListener(selector);
+		
+		this.addMouseListener(this.selector);
+		this.addFocusListener(this.selector);
+		this.addKeyListener(this.selector);
 	}
 	
 	public InteractiveListSelector<E> getSelector(){
@@ -246,6 +254,19 @@ public class InteractiveList<E extends ListViewable> extends JPanel implements I
 
 		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
+	}
+	
+	public void ensureVisible(E e, int index){
+		this.scrollRectToVisible(getBounds(index));
+	}
+
+	/**
+	 * @param e
+	 * @param index
+	 * @return
+	 */
+	public Rectangle getBounds(int index) {
+		return this.list.getComponent(index).getBounds();
 	}
 
 }

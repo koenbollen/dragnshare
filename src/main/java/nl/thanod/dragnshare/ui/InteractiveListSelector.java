@@ -3,8 +3,7 @@
  */
 package nl.thanod.dragnshare.ui;
 
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,7 +13,7 @@ import nl.thanod.util.OS;
 /**
  * @author nilsdijk
  */
-public class InteractiveListSelector<E extends ListViewable> extends MouseAdapter {
+public class InteractiveListSelector<E extends ListViewable> extends MouseAdapter implements FocusListener, KeyListener {
 
 	enum SelectMode {
 		RANGE {
@@ -93,23 +92,36 @@ public class InteractiveListSelector<E extends ListViewable> extends MouseAdapte
 				this.selected.add(e);
 				break;
 			case RANGE:
-				selectRange(this.lastIndex, index);
+				selectRange(index);
 				break;
 		}
-		this.lastIndex = index;
-		focus(e);
+		focus(e, index);
 	}
 
 	/**
 	 * @param e
+	 * @param index
 	 */
-	private void focus(E e) {
+	private void focus(E e, int index) {
 		if (this.focused != null)
 			this.focused.viewStateFocus(false);
 		this.focused = e;
+		this.lastIndex = index;
 		this.focused.viewStateFocus(true);
 	}
 
+	private int focus(int index) {
+		index = Math.max(0, Math.min(index, this.list.getModel().elementCount()-1));
+		E e = this.list.getModel().elementAt(index);
+		focus(e, index);
+		this.list.ensureVisible(e, index);
+		return index;
+	}
+
+	private void selectRange(int index) {
+		selectRange(this.lastIndex, index);
+	}
+	
 	/**
 	 * @param lastIndex2
 	 * @param index
@@ -142,13 +154,100 @@ public class InteractiveListSelector<E extends ListViewable> extends MouseAdapte
 	public List<E> getSelected() {
 		return new ArrayList<E>(this.selected);
 	}
-	
-	public void unselect(E e){
+
+	public void unselect(E e) {
 		e.viewStateSelected(false);
 		e.viewStateFocus(false);
 		this.selected.remove(e);
 		if (this.focused == e)
 			this.focused = null;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see java.awt.event.FocusListener#focusGained(java.awt.event.FocusEvent)
+	 */
+	@Override
+	public void focusGained(FocusEvent paramFocusEvent) {
+		if (this.focused != null)
+			this.focused.viewStateFocus(true);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see java.awt.event.FocusListener#focusLost(java.awt.event.FocusEvent)
+	 */
+	@Override
+	public void focusLost(FocusEvent paramFocusEvent) {
+		if (this.focused != null)
+			this.focused.viewStateFocus(false);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see java.awt.event.KeyListener#keyTyped(java.awt.event.KeyEvent)
+	 */
+	@Override
+	public void keyTyped(KeyEvent e) {
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see java.awt.event.KeyListener#keyPressed(java.awt.event.KeyEvent)
+	 */
+	@Override
+	public void keyPressed(KeyEvent e) {
+		if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+			int start = this.lastIndex;
+			int index = this.focus(this.lastIndex+1);
+			if (e.isShiftDown())
+				selectRange(start, index);
+			e.consume();
+		} else if (e.getKeyCode() == KeyEvent.VK_UP) {
+			int start = this.lastIndex;
+			int index = this.focus(this.lastIndex-1);
+			if (e.isShiftDown())
+				selectRange(start, index);
+			e.consume();
+		} else if (e.getKeyCode() == KeyEvent.VK_SPACE || e.getKeyCode() == KeyEvent.VK_ENTER) {
+			if (e.isShiftDown()){
+				selectRange(this.lastIndex);
+				e.consume();
+			}else if ((OS.isOSX() && e.isMetaDown()) || (!OS.isOSX() && e.isControlDown())){	
+				select(this.lastIndex);
+				e.consume();
+			} else {
+				clearSelected();
+				select(this.lastIndex);
+				e.consume();
+			}
+		}
+	}
+
+	/**
+	 * @param focusIndex2
+	 */
+	private void select(int index) {
+		E e = this.list.elementAt(index);
+		select(e, index);
+	}
+
+	/**
+	 * @param e
+	 * @param index
+	 */
+	private void select(E e, int index) {
+		this.selected.add(e);
+		e.viewStateSelected(true);
+		this.lastIndex = index;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see java.awt.event.KeyListener#keyReleased(java.awt.event.KeyEvent)
+	 */
+	@Override
+	public void keyReleased(KeyEvent e) {
 	}
 
 }

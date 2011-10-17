@@ -16,7 +16,9 @@ import java.util.Observable;
 import java.util.Observer;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 
+import nl.thanod.dragnshare.ui.DottedLineBorder;
 import nl.thanod.dragnshare.ui.InteractiveList.ListViewable;
 
 /**
@@ -29,6 +31,8 @@ public class ShareInfo extends JPanel implements ListViewable {
 	}
 
 	public static final JFileChooser chooser = new JFileChooser();
+	private static final Border NONFOCUSED = BorderFactory.createEmptyBorder(5, 3, 2, 3);
+	private static final Border FOCUSED = BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1), BorderFactory.createCompoundBorder(new DottedLineBorder(Color.BLACK), BorderFactory.createEmptyBorder(3, 1, 0, 1)));
 
 	/**
 	 * 
@@ -45,19 +49,20 @@ public class ShareInfo extends JPanel implements ListViewable {
 	private boolean selected;
 
 	private JLabel close;
-	
+
 	private List<JComponent> coloredComponents = new ArrayList<JComponent>();
 
 	private Monitor monitor;
 
 	public ShareInfo(SharedFile sf) {
 		super(new BorderLayout());
+		setBorder(NONFOCUSED);
+		
 		this.coloredComponents.add(this);
-
+		
 		JPanel container = new JPanel(new BorderLayout());
 		this.coloredComponents.add(container);
-		
-		setBorder(BorderFactory.createEmptyBorder(2, 2, 0, 2));
+
 		this.sf = sf;
 		this.setPreferredSize(new Dimension(0, 50));
 
@@ -128,7 +133,7 @@ public class ShareInfo extends JPanel implements ListViewable {
 		}
 		this.add(container, BorderLayout.CENTER);
 		this.add(buttons, BorderLayout.EAST);
-		
+
 		updateView();
 	}
 
@@ -212,8 +217,13 @@ public class ShareInfo extends JPanel implements ListViewable {
 		ColorScheme cs = this.sf.getColorScheme();
 		if (this.selected)
 			cs = ColorScheme.SELECTED;
-		
-		for (JComponent c:this.coloredComponents){
+
+		if (this.focused)
+			setBorder(FOCUSED);
+		else
+			setBorder(NONFOCUSED);
+
+		for (JComponent c : this.coloredComponents) {
 			c.setOpaque(true);
 			c.setBackground(cs.getColor(this.index));
 		}

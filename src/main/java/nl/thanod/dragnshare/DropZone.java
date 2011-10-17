@@ -90,6 +90,27 @@ public class DropZone extends JDialog implements MulticastShare.Listener {
 				}
 			}
 		});
+		this.list.addKeyListener(new KeyListener() {
+			
+			@Override
+			public void keyTyped(KeyEvent paramKeyEvent) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void keyReleased(KeyEvent paramKeyEvent) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_DELETE){
+					DropZone.this.list.getModel().removeAll(DropZone.this.list.getSelector().getSelected());
+				}
+			}
+		});
 
 		JLabel drop;
 		this.list.setDrop(drop = new JLabel("drop here"));
