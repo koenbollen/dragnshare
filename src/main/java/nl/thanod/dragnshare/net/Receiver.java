@@ -142,10 +142,11 @@ public class Receiver extends Thread
 			for (Listener listener:listeners)
 				listener.onStart(this.result, filename, filesize);
 			
-			long progressChunkSize = Math.min( 10, this.getFilesize() / 1000 );
-			long chunk = progressChunkSize;
+			final long progressUpdate = 500;
 			
 			long startTime = System.currentTimeMillis();
+			long nextUpdate = startTime + progressUpdate;
+			
 			this.currentStatus = Status.TRANSFERRING;
 			do
 			{
@@ -155,10 +156,10 @@ public class Receiver extends Thread
 					count += n;
 					out.write(buffer, 0, n);
 					
-					chunk -= n;
-					if( chunk <= 0 )
+
+					if( nextUpdate <= System.currentTimeMillis() )
 					{
-						chunk += progressChunkSize;
+						nextUpdate += progressUpdate;
 						fireOnProgress(filename, filesize, count, calculateSpeed(startTime, count));
 					}
 					

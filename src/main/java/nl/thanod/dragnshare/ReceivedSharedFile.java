@@ -86,7 +86,7 @@ public class ReceivedSharedFile extends Observable implements SharedFile, Receiv
 		}
 		else
 		{
-			this.speedHist = (long)(this.speedHist * .9 + speed * .1);
+			this.speedHist = (long)(this.speedHist * .5 + speed * .5);
 			speed = this.speedHist;
 			this.speed = FileUtils.humanizeBytes( speed ) + "/s";
 			
