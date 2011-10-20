@@ -145,7 +145,6 @@ public class MulticastReceiver implements Receiver, Runnable {
 
 		File target = new File(root, name);
 		
-		System.out.println(name + " saved to " + target);
 		target.getParentFile().mkdirs();
 
 		FileOutputStream out = null;

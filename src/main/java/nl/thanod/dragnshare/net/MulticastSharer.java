@@ -5,13 +5,15 @@ package nl.thanod.dragnshare.net;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
+import java.net.*;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+
+import nl.thanod.util.Settings;
+
+import org.apache.commons.net.util.SubnetUtils;
 
 /**
  * @author nilsdijk
@@ -110,12 +112,46 @@ public class MulticastSharer implements Sharer, Runnable {
 	 * @param m
 	 * @throws IOException 
 	 */
-	public void send(Message m, InetAddress addr) throws IOException {
-		byte[] data = m.toString().getBytes();
-		DatagramPacket packet = new DatagramPacket(data, data.length, addr!=null?addr:this.group, this.port);
-		this.socket.send(packet);
+	public void send(Message m, InetAddress target) throws IOException {
+		byte[] bytes = m.toString().getBytes();
+		DatagramPacket packet = new DatagramPacket(bytes, bytes.length, null, this.port);
+		
+		if (target != null)
+		{
+			packet.setAddress(target);
+			this.socket.send(packet);
+		}
+		else if( Settings.instance.getBool("bruteForceDiscover" ))
+		{
+			for (NetworkInterface dev : Collections.list(NetworkInterface.getNetworkInterfaces()) ) {
+				if(dev.isLoopback() || !dev.isUp())
+					continue;
+				
+				for( InterfaceAddress addr : dev.getInterfaceAddresses() )
+				{
+					if( addr.getNetworkPrefixLength() != 24 )
+						continue;
+					if( !(addr.getAddress() instanceof Inet4Address) )
+						continue;
+					SubnetUtils.SubnetInfo info = new SubnetUtils(addr.getAddress().getHostAddress()+"/"+addr.getNetworkPrefixLength()).getInfo();
+					for( String i : info.getAllAddresses() )
+					{
+						if( addr.getAddress().getHostAddress().equals(i) )
+							continue;
+						packet.setAddress(InetAddress.getByName(i));
+						this.socket.send(packet);
+					}
+				}
+			}
+		}
+		else
+		{
+			packet.setAddress(this.group);
+			this.socket.send(packet);
+		}
 	}
 	
+	@Override
 	public Thread start() throws IOException{
 		this.connect();
 		
