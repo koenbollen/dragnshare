@@ -69,8 +69,6 @@ public class InteractiveListSelector<E extends ListViewable> extends MouseAdapte
 		if (me.isConsumed() || me.getClickCount() != 1)
 			return;
 		E c = this.list.getElementAt(me.getPoint());
-		if (c == null)
-			return;
 		select(c, SelectMode.getSelectionMode(me));
 		me.consume();
 	}
@@ -84,12 +82,16 @@ public class InteractiveListSelector<E extends ListViewable> extends MouseAdapte
 		switch (sm) {
 			case SINGLE:
 				clearSelected();
-				e.viewStateSelected(true);
-				this.selected.add(e);
+				if (e != null){
+					e.viewStateSelected(true);
+					this.selected.add(e);
+				}
 				break;
 			case ADD:
-				e.viewStateSelected(true);
-				this.selected.add(e);
+				if (e != null){
+					e.viewStateSelected(true);
+					this.selected.add(e);
+				}
 				break;
 			case RANGE:
 				selectRange(index);
@@ -105,9 +107,10 @@ public class InteractiveListSelector<E extends ListViewable> extends MouseAdapte
 	private void focus(E e, int index) {
 		if (this.focused != null)
 			this.focused.viewStateFocus(false);
-		this.focused = e;
 		this.lastIndex = index;
-		this.focused.viewStateFocus(true);
+		this.focused = e;
+		if (this.focused != null)
+			this.focused.viewStateFocus(true);
 	}
 
 	private int focus(int index) {
