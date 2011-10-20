@@ -16,9 +16,8 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 
-import nl.thanod.dragnshare.net.MulticastShare;
-import nl.thanod.dragnshare.net.Receiver;
-import nl.thanod.dragnshare.net.Sender;
+import nl.thanod.dragnshare.net.*;
+import nl.thanod.dragnshare.net.Sharer.Listener;
 import nl.thanod.dragnshare.notify.Notifier;
 import nl.thanod.dragnshare.notify.Notifier.Type;
 import nl.thanod.dragnshare.ui.*;
@@ -29,13 +28,13 @@ import nl.thanod.util.Settings;
  * @author nilsdijk
  * @author Koen Bollen <meneer@koenbollen>
  */
-public class DropZone extends JDialog implements MulticastShare.Listener {
+public class DropZone extends JDialog implements Listener {
 
 	private static final long serialVersionUID = 7192301082111534982L;
 
 	protected volatile int count = 0;
 
-	protected final MulticastShare sharer;
+	protected final Sharer sharer;
 
 	protected final InteractiveList<ShareInfo> list;
 
@@ -59,16 +58,14 @@ public class DropZone extends JDialog implements MulticastShare.Listener {
 
 		Notifier.Factory.dropZone = this;
 
-		this.sharer = new MulticastShare();
+		this.sharer = new MulticastSharer();
 		try {
-			this.sharer.connect();
+			this.sharer.start();
 		} catch (IOException ball) {
 			ball.printStackTrace();
 			JOptionPane.showMessageDialog(null, "Could not connect the sharer", "oh noos!", JOptionPane.ERROR_MESSAGE);
 			System.exit(-1);
 		}
-		this.sharer.start();
-
 
 		//this.setModal(true);
 		this.setResizable(false);
@@ -139,7 +136,12 @@ public class DropZone extends JDialog implements MulticastShare.Listener {
 					return;
 				
 				for (final File file : files) {
-					addSharedFile(DropZone.this.sharer.share(file));
+					try {
+						addSharedFile(DropZone.this.sharer.share(file));
+					} catch (IOException ball) {
+						// TODO graphical warning
+						ball.printStackTrace();
+					}
 				}
 
 			}
@@ -147,7 +149,7 @@ public class DropZone extends JDialog implements MulticastShare.Listener {
 		new FileDrop(this, dropper);
 		new Clipper(this, dropper);
 
-		this.sharer.addMulticastListener(this);
+		this.sharer.listeners().addListener(this);
 
 		JScrollPane jsp = new JScrollPane(this.list, ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		jsp.setViewportBorder(null);
@@ -238,6 +240,64 @@ public class DropZone extends JDialog implements MulticastShare.Listener {
 		this.setupTray();
 	}
 
+	/**
+	 * @param share
+	 */
+	protected void addSharedFile(final Sender share) {
+		addSharedFile(new SharedFile() {
+			
+			@Override
+			public void start() {
+			}
+			
+			@Override
+			public boolean shouldStart() {
+				return false;
+			}
+			
+			@Override
+			public void setView(ShareInfo view) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void remove() {
+				share.cancel();
+			}
+			
+			@Override
+			public boolean isReady() {
+				return true;
+			}
+			
+			@Override
+			public String getStatus() {
+				return "sharing";
+			}
+			
+			@Override
+			public float getProgress() {
+				return 1f;
+			}
+			
+			@Override
+			public String getName() {
+				return share.getFile().getName();
+			}
+			
+			@Override
+			public File getFile() {
+				return share.getFile();
+			}
+			
+			@Override
+			public ColorScheme getColorScheme() {
+				return ColorScheme.OFFERED;
+			}
+		});
+	}
+
 	private void initDragable() {
 		final DragSource ds = new DragSource();
 		ds.createDefaultDragGestureRecognizer(this.list, DnDConstants.ACTION_COPY_OR_MOVE, new DragGestureListener() {
@@ -321,33 +381,29 @@ public class DropZone extends JDialog implements MulticastShare.Listener {
 				info.getSharedFile().start();
 			}
 		});
-		
-		if (shared.shouldStart())
-			Notifier.Factory.notify(Type.RECEIVED, "Large file availabl", "The file " + shared.getName() + " is offered but exceeded the filesize for automatic download.");
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see
-	 * it.koen.dragnshare.net.MulticastShare.Listener#onReceive(it.koen.dragnshare
-	 * .net.Receiver)
+	/* (non-Javadoc)
+	 * @see nl.thanod.dragnshare.net.Sharer.Listener#offered(nl.thanod.dragnshare.net.Receiver)
 	 */
 	@Override
-	public void onReceive(final Receiver receiver) {
-		if (!this.isFocused())
-		{
-			if( !receiver.isStarted() )
+	public void offered(Receiver receiver) {
+		long limit = Settings.instance.getInt("automaticDownloadLimit",100) * 1024 * 1024;
+		if( limit == 0 || receiver.getSize() <= limit ) {
+			try {
+				receiver.accept();
+			} catch (IOException ball) {
+				// TODO show #whatskeburt
+				if (!this.isFocused())
+					this.tray.setDecorator("exclamation");
+			}
+		} else {
+			if (!this.isFocused()){
+				Notifier.Factory.notify(Type.RECEIVED, "Large file available", "The file " + receiver.getFile().getName() + " is offered but exceeded the filesize for automatic download.");
 				this.tray.setDecorator("accept", true);
+			}
 		}
 		addSharedFile(new ReceivedSharedFile(this,receiver));
-	}
-
-	@Override
-	public void onSending(Sender sender) {
-	}
-
-	@Override
-	public void onSent(Sender sender) {
 	}
 
 	public static void main(String... args) {
@@ -360,4 +416,5 @@ public class DropZone extends JDialog implements MulticastShare.Listener {
 
 		new DropZone();
 	}
+
 }

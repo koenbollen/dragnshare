@@ -98,4 +98,16 @@ public class FileUtils
 		if( f.exists() && f.isDirectory() && f.getName().startsWith(FileUtils.PREFIX) )
 			f.delete();
 	}
+
+	/**
+	 * @return
+	 * @throws IOException 
+	 */
+	public static File createDragnShareTemp() throws IOException {
+		File dir = File.createTempFile(FileUtils.PREFIX, "");
+		dir.delete();
+		dir.mkdirs();
+		FileUtils.createdFiles.add(dir);
+		return dir;
+	}
 }

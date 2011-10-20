@@ -35,9 +35,9 @@ public class ReceivedSharedFile extends Observable implements SharedFile, Receiv
 	public ReceivedSharedFile(DropZone dropzone, Receiver receiver) {
 		this.dropzone = dropzone;
 		this.receiver = receiver;
-		this.receiver.addCompletionListener(this);
+		this.receiver.listeners().addListener(this);
 
-		this.file = this.receiver.getTarget();
+		this.file = this.receiver.getFile();
 	}
 
 	/*
@@ -67,59 +67,6 @@ public class ReceivedSharedFile extends Observable implements SharedFile, Receiv
 		return this.progress;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see it.koen.dragnshare.net.Receiver.Listener#onStart(java.io.File,
-	 * java.lang.String, long)
-	 */
-	@Override
-	public void onStart(File result, String filename, long filesize) {
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see it.koen.dragnshare.net.Receiver.Listener#onProgress(java.io.File,
-	 * java.lang.String, long, long)
-	 */
-	@Override
-	public void onProgress(File result, String filename, long filesize, long received, long speed) {
-		if( speed == 0 )
-		{
-			this.speed = "";
-			this.remain = "";
-		}
-		else
-		{
-			this.speedHist = (long)(this.speedHist * .5 + speed * .5);
-			speed = this.speedHist;
-			this.speed = FileUtils.humanizeBytes( speed ) + "/s";
-			
-			long time = (filesize - received) / speed;
-			
-			StringBuffer sb = new StringBuffer(" ( ");
-			sb.append( FileUtils.humanizeTime(time) );
-			sb.append( " left )" );
-			this.remain = sb.toString();
-		}
-		
-		
-		
-		this.updateProgress((float) received / (float) filesize);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see it.koen.dragnshare.net.Receiver.Listener#onCompleted(java.io.File,
-	 * java.lang.String, long)
-	 */
-	@Override
-	public void onCompleted(File result, String filename, long filesize) {
-		Notifier.Factory.notify(Notifier.Type.RECEIVED, "Received", "You received " + result.getName());
-		if (!this.dropzone.isFocused())
-			this.dropzone.tray.setDecorator("add");
-		this.updateProgress(1f);
-	}
-
 	/**
 	 * @param f
 	 */
@@ -135,24 +82,6 @@ public class ReceivedSharedFile extends Observable implements SharedFile, Receiv
 
 		this.setChanged();
 		this.notifyObservers();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see it.koen.dragnshare.net.Receiver.Listener#onError(java.io.File,
-	 * java.lang.String, long, java.io.IOException)
-	 */
-	@Override
-	public void onError(File target, String filename, long filesize, IOException e) {
-		e.printStackTrace();
-		updateProgress(1f);
-		this.colorScheme = ColorScheme.ERROR;
-		this.ready = false;
-		this.error  = e.getMessage();
-		Tray t = Tray.findTray();
-		t.setDecorator("exclamation");
-		setChanged();
-		notifyObservers();
 	}
 
 	/*
@@ -177,9 +106,8 @@ public class ReceivedSharedFile extends Observable implements SharedFile, Receiv
 	 */
 	@Override
 	public void remove() {
-		this.receiver.interrupt();
-		// TODO: Make sure directories are removed.
-		FileUtils.clean( this.receiver.getTarget() );
+		this.receiver.cancel();
+		FileUtils.clean( this.receiver.getFile() );
 	}
 
 	/* (non-Javadoc)
@@ -187,7 +115,7 @@ public class ReceivedSharedFile extends Observable implements SharedFile, Receiv
 	 */
 	@Override
 	public boolean shouldStart() {
-		return !this.receiver.isStarted();
+		return !this.receiver.isAccepted();
 	}
 
 	/* (non-Javadoc)
@@ -195,7 +123,11 @@ public class ReceivedSharedFile extends Observable implements SharedFile, Receiv
 	 */
 	@Override
 	public void start() {
-		this.receiver.start();
+		try {
+			this.receiver.accept();
+		} catch (IOException ball) {
+			ball.printStackTrace();
+		}
 		setChanged();
 		notifyObservers();
 	}
@@ -207,7 +139,7 @@ public class ReceivedSharedFile extends Observable implements SharedFile, Receiv
 	public String getStatus() {
 		if( this.error != null )
 			return "error: " + this.error;
-		if (!this.receiver.isStarted())
+		if (!this.receiver.isAccepted())
 			return "waiting for accept";
 		if (this.getProgress() < 1f)
 			return "downloading " + this.speed + this.remain;
@@ -219,5 +151,70 @@ public class ReceivedSharedFile extends Observable implements SharedFile, Receiv
 	{
 		// TODO Auto-generated method stub
 		
+	}
+
+	/* (non-Javadoc)
+	 * @see nl.thanod.dragnshare.net.Receiver.Listener#onProgress(nl.thanod.dragnshare.net.Receiver, long, long, long)
+	 */
+	@Override
+	public void onProgress(Receiver receiver, long size, long received, long speed) {
+		if( speed == 0 )
+		{
+			this.speed = "";
+			this.remain = "";
+		}
+		else
+		{
+			this.speedHist = (long)(this.speedHist * .5 + speed * .5);
+			speed = this.speedHist;
+			this.speed = FileUtils.humanizeBytes( speed ) + "/s";
+			
+			long time = (size - received) / speed;
+			
+			StringBuffer sb = new StringBuffer(" ( ");
+			sb.append( FileUtils.humanizeTime(time) );
+			sb.append( " left )" );
+			this.remain = sb.toString();
+		}
+		
+		
+		
+		this.updateProgress((float) received / (float) size);
+	}
+
+	/* (non-Javadoc)
+	 * @see nl.thanod.dragnshare.net.Receiver.Listener#onStart(nl.thanod.dragnshare.net.Receiver)
+	 */
+	@Override
+	public void onStart(Receiver receiver) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	/* (non-Javadoc)
+	 * @see nl.thanod.dragnshare.net.Receiver.Listener#onCompleted(nl.thanod.dragnshare.net.Receiver)
+	 */
+	@Override
+	public void onCompleted(Receiver receiver) {
+		Notifier.Factory.notify(Notifier.Type.RECEIVED, "Received", "You received " + receiver.getFile().getName());
+		if (!this.dropzone.isFocused())
+			this.dropzone.tray.setDecorator("add");
+		this.updateProgress(1f);
+	}
+
+	/* (non-Javadoc)
+	 * @see nl.thanod.dragnshare.net.Receiver.Listener#onError(nl.thanod.dragnshare.net.Receiver, java.lang.Exception)
+	 */
+	@Override
+	public void onError(Receiver receiver, Exception cause) {
+		cause.printStackTrace();
+		updateProgress(1f);
+		this.colorScheme = ColorScheme.ERROR;
+		this.ready = false;
+		this.error  = cause.getMessage();
+		Tray t = Tray.findTray();
+		t.setDecorator("exclamation");
+		setChanged();
+		notifyObservers();
 	}
 }

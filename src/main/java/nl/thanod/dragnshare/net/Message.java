@@ -1,131 +1,139 @@
+/**
+ * 
+ */
 package nl.thanod.dragnshare.net;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
+import java.net.ProtocolException;
 import java.util.UUID;
 
-public class Message implements Serializable
-{
+/**
+ * @author Nils Dijk <me@thanod.nl>
+ * @author Koen Bollen <meneer@koenbollen.nl>
+ */
+public class Message implements Serializable {
 
-	private static final long serialVersionUID = 6093736725319921251L;
+	public enum Type {
+		ACCEPT,
+		FILE,
+		DIRECTORY;
 
-	public enum MessageType
-	{
-		OFFER, ACCEPT,
+		public static Type getByName(String name) throws ProtocolException {
+			name = name.toLowerCase();
+			for (Type t : Type.values())
+				if (t.name().toLowerCase().equals(name))
+					return t;
+			throw new ProtocolException("Unknown message type: " + name);
+		}
 	}
 
-	private MessageType type;
+	private static final long serialVersionUID = -8087115562340780366L;
 
-	private String filename;
-	private long filesize;
-	private int port;
-	private UUID id;
-	private boolean directory;
+	public final Type type;
+	public final UUID id;
+	public final String name;
+	public final long size;
 
-	public Message(long filesize, String filename, UUID id)
-	{
-		super();
-		this.type = MessageType.OFFER;
-		this.filename = filename;
-		this.filesize = filesize;
-		this.id = id;
-		this.directory = false;
-	}
+	public final int port;
 
-	public Message(long filesize, String filename)
-	{
-		super();
-		this.type = MessageType.OFFER;
-		this.filename = filename;
-		this.filesize = filesize;
-		this.id = UUID.randomUUID();
-		this.directory = false;
-	}
+	private Message(Type type, UUID id, int port, long size, String name) {
+		this.type = type;
 
-	public Message(File file, boolean dir)
-	{
-		this(file.length(), file.getName());
-		this.directory = dir;
-	}
+		if (id == null)
+			this.id = UUID.randomUUID();
+		else
+			this.id = id;
 
-	public Message(UUID id, int port)
-	{
-		super();
-		this.id = id;
-		this.type = MessageType.ACCEPT;
 		this.port = port;
+		this.size = size;
+		this.name = name.trim();
 	}
 
 	@Override
-	public String toString()
-	{
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((id == null) ? 0 : id.hashCode());
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result + port;
+		result = prime * result + (int) (size ^ (size >>> 32));
+		result = prime * result + ((type == null) ? 0 : type.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Message other = (Message) obj;
+		if (id == null) {
+			if (other.id != null)
+				return false;
+		} else if (!id.equals(other.id))
+			return false;
+		if (name == null) {
+			if (other.name != null)
+				return false;
+		} else if (!name.equals(other.name))
+			return false;
+		if (port != other.port)
+			return false;
+		if (size != other.size)
+			return false;
+		if (type != other.type)
+			return false;
+		return true;
+	}
+
+	@Override
+	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append(this.type.ordinal());
-		sb.append(":");
+
+		sb.append(this.type.name().toLowerCase());
+		sb.append(':');
 		sb.append(this.id);
-		sb.append(":");
-		if (this.type == MessageType.OFFER)
-		{
-			sb.append(this.filesize);
-			sb.append(":");
-			sb.append(this.filename);
-			sb.append(":");
-			sb.append(this.directory);
-		} else
-		{
-			sb.append(this.port);
-		}
+		sb.append(':');
+		sb.append(this.port);
+		sb.append(':');
+		sb.append(this.size);
+		sb.append(':');
+		sb.append(this.name);
+
 		return sb.toString();
 	}
 
-	public static Message parse(String raw)
-	{
-		String[] pieces = raw.split(":");
-		MessageType t = MessageType.values()[Integer.parseInt(pieces[0])];
-		if (t == MessageType.OFFER)
-		{
-			Message m = new Message(Long.parseLong(pieces[2]), pieces[3], UUID.fromString(pieces[1]));
-			if( pieces.length >= 5 )
-				m.directory = Boolean.parseBoolean(pieces[4]);
-			return m;
+	public static Message accept(UUID id, int port) {
+		return new Message(Type.ACCEPT, id, port, 0, "");
+	}
+
+	public static Message file(File file) {
+		return new Message(file.isDirectory() ? Type.DIRECTORY : Type.FILE, UUID.randomUUID(), -1, measureLength(file), file.getName());
+	}
+
+	public static Message parse(String message) throws IOException {
+		String[] parts = message.split(":", 5);
+		try {
+			return new Message(Type.getByName(parts[0]), UUID.fromString(parts[1]), Integer.parseInt(parts[2]), Long.parseLong(parts[3]), parts[4]);
+		} catch (NumberFormatException ball) {
+			throw new IOException("could not parse message", ball);
 		}
-		return new Message(UUID.fromString(pieces[1]), Integer.parseInt(pieces[2]));
 	}
 
-	public MessageType getType()
-	{
-		return this.type;
+	private static long measureLength(File file) {
+		if (file.isFile())
+			return file.length();
+		if (!file.isDirectory())
+			return 0;
+		long size = 0;
+		for (File f : file.listFiles()) {
+			size += measureLength(f);
+		}
+		return size;
 	}
-
-	public UUID getID()
-	{
-		return this.id;
-	}
-
-	public int getPort()
-	{
-		if (this.type != MessageType.ACCEPT)
-			throw new RuntimeException("Not a ACCEPT message.");
-		return this.port;
-	}
-
-	public String getFilename()
-	{
-		if (this.type != MessageType.OFFER)
-			throw new RuntimeException("Not a OFFER message.");
-		return this.filename;
-	}
-
-	public long getFilesize()
-	{
-		if (this.type != MessageType.OFFER)
-			throw new RuntimeException("Not a OFFER message.");
-		return this.filesize;
-	}
-
-	public boolean isDirectory()
-	{
-		return this.directory;
-	}
-
 }

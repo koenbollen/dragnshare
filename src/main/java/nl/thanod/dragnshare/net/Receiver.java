@@ -1,333 +1,99 @@
+/**
+ * 
+ */
 package nl.thanod.dragnshare.net;
 
-import java.io.*;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.*;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipException;
-import java.util.zip.ZipFile;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
-import nl.thanod.util.FileUtils;
+/**
+ * @author nilsdijk
+ */
+public interface Receiver extends Share {
+	public interface Listener {
+		void onProgress(Receiver receiver, long size, long received, long speed);
 
-public class Receiver extends Thread
-{
+		void onStart(Receiver receiver);
 
-	public static final int BUFFERSIZE = 1024*64;
+		void onCompleted(Receiver receiver);
 
-	public interface Listener
-	{
-		void onStart(File result, String filename, long filesize);
-		void onProgress(File result, String filename, long filesize, long received, long speed);
-		void onCompleted(File result, String filename, long filesize);
-		void onError(File target, String filename, long filesize, IOException e);
+		void onError(Receiver receiver, Exception cause);
 	}
-	
-	public static abstract class Adapter implements Listener
-	{
 
-		/* (non-Javadoc)
-		 * @see it.koen.dragnshare.net.Receiver.Listener#onStart(java.io.File, java.lang.String, long)
+	public static class Listeners implements Listener {
+		private Set<Receiver.Listener> listeners = Collections.synchronizedSet(new HashSet<Receiver.Listener>());
+
+		public boolean addListener(Receiver.Listener listener) {
+			return this.listeners.add(listener);
+		}
+
+		public boolean removeListener(Receiver.Listener listener) {
+			return this.listeners.remove(listener);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see nl.thanod.dragnshare.net.Receiver.Listener#onProgress(nl.thanod.
+		 * dragnshare.net.Receiver, long, long, long)
 		 */
 		@Override
-		public void onStart(File result, String filename, long filesize) {}
+		public void onProgress(Receiver receiver, long size, long received, long speed) {
+			Set<Receiver.Listener> listeners = new HashSet<Receiver.Listener>(this.listeners);
+			for (Receiver.Listener l : listeners)
+				l.onProgress(receiver, size, received, speed);
+		}
 
-		/* (non-Javadoc)
-		 * @see it.koen.dragnshare.net.Receiver.Listener#onProgress(java.io.File, java.lang.String, long, long)
+		/*
+		 * (non-Javadoc)
+		 * @see
+		 * nl.thanod.dragnshare.net.Receiver.Listener#onStart(nl.thanod.dragnshare
+		 * .net.Receiver)
 		 */
 		@Override
-		public void onProgress(File result, String filename, long filesize, long received, long speed) {}
+		public void onStart(Receiver receiver) {
+			Set<Receiver.Listener> listeners = new HashSet<Receiver.Listener>(this.listeners);
+			for (Receiver.Listener l : listeners)
+				l.onStart(receiver);
+		}
 
-		/* (non-Javadoc)
-		 * @see it.koen.dragnshare.net.Receiver.Listener#onCompleted(java.io.File, java.lang.String, long)
+		/*
+		 * (non-Javadoc)
+		 * @see
+		 * nl.thanod.dragnshare.net.Receiver.Listener#onCompleted(nl.thanod.
+		 * dragnshare.net.Receiver)
 		 */
 		@Override
-		public void onCompleted(File result, String filename, long filesize) {}
+		public void onCompleted(Receiver receiver) {
+			Set<Receiver.Listener> listeners = new HashSet<Receiver.Listener>(this.listeners);
+			for (Receiver.Listener l : listeners)
+				l.onCompleted(receiver);
+		}
 
-		/* (non-Javadoc)
-		 * @see it.koen.dragnshare.net.Receiver.Listener#onError(java.io.File, java.lang.String, long, java.io.IOException)
+		/*
+		 * (non-Javadoc)
+		 * @see
+		 * nl.thanod.dragnshare.net.Receiver.Listener#onError(nl.thanod.dragnshare
+		 * .net.Receiver, java.io.IOException)
 		 */
 		@Override
-		public void onError(File target, String filename, long filesize, IOException e) {}
-		
-	}
-
-	public enum Status
-	{
-		STARTING, LISTENING, TRANSFERRING, UNPACKING, COMPLETED, FAILED;
-	}
-
-	private final Message message;
-	private final InetAddress addr;
-	private final MulticastShare parent;
-	private File target;
-	private File result;
-	private ServerSocket s;
-	private volatile Status currentStatus;
-	private final List<Listener> listeners;
-	private boolean started;
-
-	public Receiver( MulticastShare parent, Message message, InetAddress addr ) throws IOException
-	{
-		this.setDaemon(true);
-		this.message = message;
-		this.addr = addr;
-		this.parent = parent;
-		this.currentStatus = Status.STARTING;
-		this.listeners = Collections.synchronizedList(new ArrayList<Receiver.Listener>());
-
-		this.target = FileUtils.createDragnShareFile(this.message.getFilename());
-		if( this.message.isDirectory() )
-		{
-			String name = this.message.getFilename();
-			name = name.substring(0, name.length()-4);
-			this.result = FileUtils.createDragnShareDir( name );
+		public void onError(Receiver receiver, Exception cause) {
+			Set<Receiver.Listener> listeners = new HashSet<Receiver.Listener>(this.listeners);
+			for (Receiver.Listener l : listeners)
+				l.onError(receiver, cause);
 		}
-		else
-			this.result = this.target;
-		this.started = false;
 
-		this.s = null;
-	}
-	
-	@Override
-	public synchronized void start()
-	{
-		if( this.started )
-			return;
-		this.started = true;
-
-		try
-		{
-			this.s = new ServerSocket(0, 1);
-			this.s.setSoTimeout(5000);
-		} catch (IOException e1)
-		{
-			e1.printStackTrace();
-			return;
-		}
-		super.start();
-		try
-		{
-			this.parent.send(new Message(this.message.getID(), this.getLocalPort()), this.addr);
-		} catch(IOException e )
-		{
-			e.printStackTrace();
-			this.interrupt();
-		}
 	}
 
-	@Override
-	public void run()
-	{
-		if (this.s == null)
-			throw new RuntimeException("no socket at run");
-		this.currentStatus = Status.LISTENING;
-		String filename = this.message.getFilename();
-		long filesize = this.message.getFilesize();
-		Socket client = null;
-		InputStream in = null;
-		OutputStream out = null;
-		try
-		{
-			int n = 0;
-			long count = 0;
-			byte[] buffer = new byte[BUFFERSIZE];
-			client = this.s.accept();
-			in = client.getInputStream();
-			out = new FileOutputStream(this.target);
+	Receiver.Listeners listeners();
 
-			List<Listener> listeners = new ArrayList<Receiver.Listener>(this.listeners);
-			for (Listener listener:listeners)
-				listener.onStart(this.result, filename, filesize);
-			
-			final long progressUpdate = 500;
-			
-			long startTime = System.currentTimeMillis();
-			long nextUpdate = startTime + progressUpdate;
-			
-			this.currentStatus = Status.TRANSFERRING;
-			do
-			{
-				n = in.read(buffer, 0, buffer.length);
-				if (n > 0)
-				{
-					count += n;
-					out.write(buffer, 0, n);
-					
+	void accept() throws IOException;
 
-					if( nextUpdate <= System.currentTimeMillis() )
-					{
-						nextUpdate += progressUpdate;
-						fireOnProgress(filename, filesize, count, calculateSpeed(startTime, count));
-					}
-					
-					if (n < buffer.length)
-						Thread.sleep(1);
-				}
-			} while (n > 0 && !Thread.interrupted());
+	void cancel();
 
-			fireOnProgress(filename, filesize, count, 0);
+	boolean isAccepted();
 
-			if (count != filesize)
-				throw new IOException("didn't receive enough bytes (expected "+filesize+" bytes, got "+count+").");
+	long getSize();
 
-			if( this.message.isDirectory() )
-			{
-				this.currentStatus = Status.UNPACKING;
-				unzip();
-			}
-			
-			this.currentStatus = Status.COMPLETED;
-
-			listeners = new ArrayList<Receiver.Listener>(this.listeners);
-			for (Listener listener:listeners)
-				listener.onCompleted(this.result, filename, filesize);
-
-		} catch (IOException e)
-		{
-			e.printStackTrace();
-			this.currentStatus = Status.FAILED;
-
-			List<Listener> listeners = new ArrayList<Receiver.Listener>(this.listeners);
-			for (Listener listener:listeners)
-				listener.onError(this.result, filename, filesize, e);
-					
-		}
-		catch (InterruptedException e)
-		{
-			e.printStackTrace();
-		} finally
-		{
-			try {
-				if (client != null)
-					client.close();
-			} catch (IOException e)
-			{
-			}
-			try
-			{
-				if (this.s != null)
-					this.s.close();
-			} catch (IOException e)
-			{
-			}
-			try
-			{
-				if (out != null)
-					out.close();
-			} catch (IOException e)
-			{
-
-			}
-		}
-	}
-
-	private static long calculateSpeed(long start, long count)
-	{
-		long time = ((System.currentTimeMillis()-start) / 1000);
-		if( time == 0 )
-			return 0;
-		return count / time;
-	}
-
-	private void fireOnProgress(String filename, long filesize, long count, long speed)
-	{
-		List<Listener> listeners;
-		listeners = new ArrayList<Receiver.Listener>(this.listeners);
-		for (Listener listener:listeners)
-			listener.onProgress(this.result, filename, filesize, count, speed);
-	}
-
-	private void unzip() throws ZipException, IOException, FileNotFoundException
-	{
-		int n;
-		InputStream in = null;
-		OutputStream out = null;
-		byte[] buffer = new byte[BUFFERSIZE + 1];
-		ZipFile zip = new ZipFile(this.target);
-		try
-		{
-			Enumeration<? extends ZipEntry> entries = zip.entries();
-	
-			while(entries.hasMoreElements())
-			{
-				ZipEntry entry = entries.nextElement();
-	
-				try
-				{
-					in = zip.getInputStream(entry);
-					File f = new File( this.result.getParentFile(), entry.getName() );
-					f.getParentFile().mkdirs();
-					f.createNewFile();
-					out = new FileOutputStream(f);
-					do
-					{
-						n = in.read(buffer, 0, BUFFERSIZE);
-						if (n > 0)
-							out.write(buffer, 0, n);
-					} while (n > 0 && !Thread.interrupted());
-				} finally {
-					if( in != null )
-						in.close();
-					if( out != null )
-						out.close();
-				}
-			}
-		} finally
-		{
-			zip.close();
-		}
-	}
-
-	public void addCompletionListener(Receiver.Listener listener)
-	{
-		if (listener != null && !this.listeners.contains(listener))
-			this.listeners.add(listener);
-	}
-
-	public boolean removeCompletionListener(Listener listener)
-	{
-		return this.listeners.remove(listener);
-	}
-
-	public int getLocalPort()
-	{
-		if (this.s == null)
-			throw new RuntimeException("connect() before getting port.");
-		return this.s.getLocalPort();
-	}
-
-	public Status getCurrentStatus()
-	{
-		return this.currentStatus;
-	}
-
-	public boolean isCompleted()
-	{
-		return this.currentStatus == Status.COMPLETED;
-	}
-	
-	public UUID getMessageID()
-	{
-		return this.message.getID();
-	}
-
-	public File getTarget() {
-		return this.result;
-	}
-
-	public String getFilename() {
-		return this.message.getFilename();
-	}
-
-	public long getFilesize() {
-		return this.message.getFilesize();
-	}
-	
-	public boolean isStarted()
-	{
-		return this.started;
-	}
 }

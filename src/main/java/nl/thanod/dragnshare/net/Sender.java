@@ -1,89 +1,60 @@
+/**
+ * 
+ */
 package nl.thanod.dragnshare.net;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.InetAddress;
-import java.net.Socket;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
-public class Sender extends Thread
-{
-
-	public static final int BUFFERSIZE = Receiver.BUFFERSIZE;
-
-	private final MulticastShare sharer;
-	private final File file;
-	private final InetAddress addr;
-	private final int port;
-
-	public Sender(MulticastShare sharer, File file, InetAddress addr, int port)
-	{
-		this.setDaemon(true);
-		this.sharer = sharer;
-		this.file = file;
-		this.addr = addr;
-		this.port = port;
+/**
+ * @author nilsdijk
+ *
+ */
+public interface Sender extends Share {
+	public interface Listener {
+		void onSending(Sender sender);
+		void onSent(Sender sender);
+		void onError(Sender sender, Exception ball);
 	}
-
-	@Override
-	public void run()
-	{
-
-		Socket s = null;
-		InputStream in = null;
-		try
-		{
-			int n;
-			byte[] buffer = new byte[BUFFERSIZE];
-
-			s = new Socket(this.addr, this.port);
-			s.setSoTimeout(5000);
-
-			in = new FileInputStream(this.file);
-			OutputStream out = s.getOutputStream();
-
-			do
-			{
-				n = in.read(buffer, 0, BUFFERSIZE);
-				if (n > 0)
-				{
-					out.write(buffer, 0, n);
-				}
-			} while (n > 0);
-
-		} catch (Exception e)
-		{
-			e.printStackTrace();
-		} finally
-		{
-			this.sharer.fireSent(this);
-			try
-			{
-				if (s != null)
-					s.close();
-			} catch (IOException e)
-			{
-			}
-			try
-			{
-				if (in != null)
-					in.close();
-			} catch (IOException e)
-			{
-
-			}
+	
+	public static class Listeners implements Listener {
+		private Set<Sender.Listener> listeners = Collections.synchronizedSet(new HashSet<Sender.Listener>());
+		
+		public boolean addListener(Sender.Listener listener){
+			return this.listeners.add(listener);
 		}
-	}
+		
+		public boolean removeListener(Sender.Listener listener){
+			return this.listeners.remove(listener);
+		}
+		
+		@Override
+		public void onSending(Sender sender) {
+			Set<Sender.Listener> listeners = new HashSet<Sender.Listener>(this.listeners);
+			for (Sender.Listener l:listeners)
+				l.onSending(sender);
+		}
 
-	public File getFile()
-	{
-		return this.file;
-	}
+		@Override
+		public void onSent(Sender sender) {
+			Set<Sender.Listener> listeners = new HashSet<Sender.Listener>(this.listeners);
+			for (Sender.Listener l:listeners)
+				l.onSent(sender);
+		}
 
-	public int getPort()
-	{
-		return this.port;
+		@Override
+		public void onError(Sender sender, Exception ball) {
+			Set<Sender.Listener> listeners = new HashSet<Sender.Listener>(this.listeners);
+			for (Sender.Listener l:listeners)
+				l.onError(sender, ball);
+		}
+		
 	}
+	
+	Sender.Listeners listeners();
+	Message getMessage();
+	void cancel();
+	
 }
