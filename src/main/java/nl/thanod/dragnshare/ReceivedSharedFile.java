@@ -142,7 +142,7 @@ public class ReceivedSharedFile extends Observable implements SharedFile, Receiv
 	@Override
 	public String getStatus() {
 		if( this.error != null )
-			return "error: " + this.error;
+			return this.error;
 		if (!this.receiver.isAccepted())
 			return "waiting for accept";
 		if (this.getProgress() < 1f)
@@ -215,7 +215,7 @@ public class ReceivedSharedFile extends Observable implements SharedFile, Receiv
 		updateProgress(1f);
 		this.colorScheme = ColorScheme.ERROR;
 		this.ready = false;
-		this.error  = cause.getMessage();
+		this.error = "error: " + cause.getMessage();
 		Tray t = Tray.findTray();
 		t.setDecorator("exclamation");
 		setChanged();

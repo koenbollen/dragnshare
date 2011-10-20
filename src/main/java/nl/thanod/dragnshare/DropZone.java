@@ -251,64 +251,7 @@ public class DropZone extends JDialog implements Listener {
 	 * @param share
 	 */
 	protected void addSharedFile(final Sender share) {
-		addSharedFile(new SharedFile() {
-			
-			@Override
-			public void start() {
-			}
-			
-			@Override
-			public boolean shouldStart() {
-				return false;
-			}
-			
-			@Override
-			public void setView(ShareInfo view) {
-				// TODO Auto-generated method stub
-				
-			}
-			
-			@Override
-			public void cancel() {
-				share.cancel();
-			}
-			
-			@Override
-			public boolean isReady() {
-				return false;
-			}
-			
-			@Override
-			public String getStatus() {
-				return "sharing";
-			}
-			
-			@Override
-			public float getProgress() {
-				return 1f;
-			}
-			
-			@Override
-			public String getName() {
-				return share.getFile().getName();
-			}
-			
-			@Override
-			public File getFile() {
-				return share.getFile();
-			}
-			
-			@Override
-			public ColorScheme getColorScheme() {
-				return ColorScheme.OFFERED;
-			}
-
-			@Override
-			public void remove() {
-				// TODO Auto-generated method stub
-				
-			}
-		});
+		addSharedFile(new LocalShared(share));
 	}
 
 	private void initDragable() {

@@ -56,8 +56,9 @@ public class MulticastSender implements Sender {
 		 * @param socket
 		 * @param dir
 		 * @throws IOException 
+		 * @throws InterruptedException 
 		 */
-		private void sendDir(Socket socket, URI root, File dir) throws IOException {
+		private void sendDir(Socket socket, URI root, File dir) throws IOException, InterruptedException {
 			for (File f : dir.listFiles()) {
 				if (f.isFile())
 					sendFile(socket, root, f);
@@ -70,8 +71,9 @@ public class MulticastSender implements Sender {
 		 * @param socket
 		 * @param file
 		 * @throws IOException
+		 * @throws InterruptedException 
 		 */
-		private void sendFile(Socket socket, URI root, File file) throws IOException {
+		private void sendFile(Socket socket, URI root, File file) throws IOException, InterruptedException {
 			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
 			String name = file.getName();
@@ -95,6 +97,12 @@ public class MulticastSender implements Sender {
 					}
 					if (read < 0)
 						throw new EOFException(name);
+					
+					if (read != buffer.length)
+						Thread.sleep(1);
+					
+					if (Thread.interrupted())
+						throw new InterruptedException();
 				}
 			} finally {
 				if (in != null) {

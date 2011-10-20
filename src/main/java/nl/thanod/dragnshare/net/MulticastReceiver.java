@@ -166,7 +166,7 @@ public class MulticastReceiver implements Receiver, Runnable {
 					this.total += read;
 				}
 				if (read < 0)
-					throw new EOFException();
+					throw new IOException("other side canceled");
 				
 				if (nextUpdate <= System.currentTimeMillis()) {
 					updateSpeed();
