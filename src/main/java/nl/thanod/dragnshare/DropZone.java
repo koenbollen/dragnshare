@@ -275,7 +275,7 @@ public class DropZone extends JDialog implements Listener {
 			
 			@Override
 			public boolean isReady() {
-				return true;
+				return false;
 			}
 			
 			@Override
