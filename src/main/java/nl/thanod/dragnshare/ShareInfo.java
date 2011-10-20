@@ -41,7 +41,7 @@ public class ShareInfo extends JPanel implements ListViewable, Observer {
 
 	protected JLabel label;
 
-	protected SharedFile sf;
+	protected final SharedFile sf;
 	private final JLabel status;
 
 	private int index;

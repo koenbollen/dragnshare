@@ -94,6 +94,7 @@ public class InteractiveList<E extends ListViewable> extends JPanel implements I
 		this.elements.add(index, e);
 		updateIndexes(index);
 		updateDrop();
+		
 		this.revalidate();
 	}
 

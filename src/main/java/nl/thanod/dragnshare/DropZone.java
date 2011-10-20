@@ -71,7 +71,6 @@ public class DropZone extends JDialog implements Listener {
 		this.setResizable(false);
 		
 		this.list = new InteractiveList<ShareInfo>();
-		this.list.setPreferredSize(new Dimension(400,300));
 		this.list.addMouseListener(new MouseAdapter() {
 			/* (non-Javadoc)
 			 * @see java.awt.event.MouseAdapter#mouseClicked(java.awt.event.MouseEvent)
@@ -237,14 +236,15 @@ public class DropZone extends JDialog implements Listener {
 			}
 		});
 
+		setSize(new Dimension(400, 300));
 		setResizable(false);
 		setAlwaysOnTop(true);
 		if( Settings.instance.getProperty("location_x") == null )
 			setLocationRelativeTo(null);
 
 		initDragable();
-		this.pack();
 		this.setupTray();
+		
 	}
 
 	/**
