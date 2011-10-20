@@ -4,30 +4,48 @@ import java.awt.BorderLayout;
 import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.event.*;
+import java.awt.Window;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+import javax.swing.UIManager;
+import javax.swing.WindowConstants;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 
 import nl.thanod.dragnshare.ShareInfo;
 import nl.thanod.util.Settings;
 
-public class SettingsPane extends JFrame
+public class SettingsPane extends JDialog
 {
 	private static final long serialVersionUID = -2755952784476390645L;
 
 	private Map<String, JPanel> panes;
 
-	public SettingsPane()
+	public SettingsPane(Window owner)
 	{
-		super("Drag'n Share - Preferences");
+		super(owner, "Drag'n Share - Preferences");
 		
+		setModal(true);
 		setLayout(new BorderLayout());
-		setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
+		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+		setLocationRelativeTo(owner);
 
 		this.panes = new HashMap<String, JPanel>();
 		JTabbedPane tabs = new JTabbedPane();
@@ -205,8 +223,8 @@ public class SettingsPane extends JFrame
 		{
 			ball.printStackTrace();
 		}
-		SettingsPane sp = new SettingsPane();
-		sp.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+		SettingsPane sp = new SettingsPane(null);
+		//sp.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		sp.setVisible(true);
 	}
 }

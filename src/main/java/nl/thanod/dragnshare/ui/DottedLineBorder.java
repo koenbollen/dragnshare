@@ -12,11 +12,6 @@ import javax.swing.border.Border;
  */
 public class DottedLineBorder implements Border {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -6735017297441019485L;
-
 	private final Paint paint;
 	private final Insets insets;
 

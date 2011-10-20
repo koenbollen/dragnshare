@@ -3,10 +3,28 @@
  */
 package nl.thanod.dragnshare;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Desktop;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Frame;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.datatransfer.Transferable;
-import java.awt.dnd.*;
-import java.awt.event.*;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DragGestureEvent;
+import java.awt.dnd.DragGestureListener;
+import java.awt.dnd.DragSource;
+import java.awt.dnd.DragSourceAdapter;
+import java.awt.dnd.DragSourceDropEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowFocusListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -14,13 +32,29 @@ import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import javax.imageio.ImageIO;
-import javax.swing.*;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.ScrollPaneConstants;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.WindowConstants;
 
-import nl.thanod.dragnshare.net.*;
+import nl.thanod.dragnshare.net.MulticastSharer;
+import nl.thanod.dragnshare.net.Receiver;
+import nl.thanod.dragnshare.net.Sender;
+import nl.thanod.dragnshare.net.Sharer;
 import nl.thanod.dragnshare.net.Sharer.Listener;
 import nl.thanod.dragnshare.notify.Notifier;
 import nl.thanod.dragnshare.notify.Notifier.Type;
-import nl.thanod.dragnshare.ui.*;
+import nl.thanod.dragnshare.ui.InteractiveList;
+import nl.thanod.dragnshare.ui.InteractiveListModel;
+import nl.thanod.dragnshare.ui.SettingsPane;
+import nl.thanod.dragnshare.ui.TopLineBorder;
+import nl.thanod.dragnshare.ui.Tray;
 import nl.thanod.util.ScreenInfo;
 import nl.thanod.util.Settings;
 
@@ -210,7 +244,7 @@ public class DropZone extends JDialog implements Listener {
 			@Override
 			public void mouseClicked(MouseEvent e)
 			{
-				new SettingsPane().setVisible(true);
+				new SettingsPane(DropZone.this).setVisible(true);
 			}
 		});
 		quitpref.setBackground(Color.WHITE);

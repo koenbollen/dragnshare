@@ -33,6 +33,7 @@ public class ShareInfo extends JPanel implements ListViewable, Observer {
 	public static final JFileChooser chooser = new JFileChooser();
 	private static final Border NONFOCUSED = BorderFactory.createEmptyBorder(7, 7, 7, 7);
 	private static final Border FOCUSED = BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1), BorderFactory.createCompoundBorder(new DottedLineBorder(Color.BLACK), BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+	private static final Border SELECTEDFOCUSED = BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1), BorderFactory.createCompoundBorder(new DottedLineBorder(Color.WHITE), BorderFactory.createEmptyBorder(5, 5, 5, 5)));
 
 	/**
 	 * 
@@ -196,7 +197,7 @@ public class ShareInfo extends JPanel implements ListViewable, Observer {
 			cs = ColorScheme.SELECTED;
 
 		if (this.focused)
-			setBorder(FOCUSED);
+			setBorder(this.selected?SELECTEDFOCUSED:FOCUSED);
 		else
 			setBorder(NONFOCUSED);
 
