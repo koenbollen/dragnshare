@@ -173,4 +173,12 @@ public class MulticastSender implements Sender {
 		return this.file;
 	}
 
+	/* (non-Javadoc)
+	 * @see nl.thanod.dragnshare.net.Sender#getSize()
+	 */
+	@Override
+	public long getSize() {
+		return this.message.size;
+	}
+
 }

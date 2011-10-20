@@ -221,4 +221,12 @@ public class ReceivedSharedFile extends Observable implements SharedFile, Receiv
 		setChanged();
 		notifyObservers();
 	}
+
+	/* (non-Javadoc)
+	 * @see nl.thanod.dragnshare.SharedFile#getSize()
+	 */
+	@Override
+	public long getSize() {
+		return this.receiver.getSize();
+	}
 }

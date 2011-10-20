@@ -58,7 +58,7 @@ public class FileUtils
 		return result;
 	}
 
-	public static String humanizeBytes(double size)
+	public static String humanizeBytes(float size)
 	{
 		int index = 0;
 		while (size > 1024 && index < FileUtils.byteSuffixes.length-1){

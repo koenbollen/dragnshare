@@ -36,4 +36,9 @@ public interface SharedFile {
 	 * 
 	 */
 	void remove();
+
+	/**
+	 * @return
+	 */
+	long getSize();
 }

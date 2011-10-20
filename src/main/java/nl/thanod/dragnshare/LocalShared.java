@@ -200,4 +200,12 @@ public class LocalShared extends Observable implements SharedFile, Listener {
 		notifyObservers();
 	}
 
+	/* (non-Javadoc)
+	 * @see nl.thanod.dragnshare.SharedFile#getSize()
+	 */
+	@Override
+	public long getSize() {
+		return this.sender.getSize();
+	}
+
 }

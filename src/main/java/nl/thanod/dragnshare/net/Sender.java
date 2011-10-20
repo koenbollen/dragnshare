@@ -56,5 +56,6 @@ public interface Sender extends Share {
 	Sender.Listeners listeners();
 	Message getMessage();
 	void cancel();
+	long getSize();
 	
 }

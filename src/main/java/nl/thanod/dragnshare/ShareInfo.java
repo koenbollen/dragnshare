@@ -19,6 +19,7 @@ import javax.swing.border.Border;
 
 import nl.thanod.dragnshare.ui.DottedLineBorder;
 import nl.thanod.dragnshare.ui.InteractiveList.ListViewable;
+import nl.thanod.util.FileUtils;
 
 /**
  * @author nilsdijk
@@ -58,6 +59,7 @@ public class ShareInfo extends JPanel implements ListViewable, Observer {
 	private JPanel container;
 	private JLabel start;
 	private JPanel buttons;
+	private JLabel size;
 
 	public ShareInfo(SharedFile sf) {
 		super(new BorderLayout());
@@ -71,10 +73,20 @@ public class ShareInfo extends JPanel implements ListViewable, Observer {
 		this.coloredComponents.add(this.container);
 
 		this.sf = sf;
-		this.setPreferredSize(new Dimension(0, 60));
+		this.setPreferredSize(new Dimension(0, 70));
 
 		Icon icon = chooser.getIcon(sf.getFile());
-		this.container.add(this.label = new JLabel(sf.getName()), BorderLayout.NORTH);
+		JPanel top = new JPanel(new FlowLayout(FlowLayout.LEADING,0,3));
+		top.setOpaque(false);
+		top.add(this.label = new JLabel(sf.getName()));
+		
+		top.add(Box.createHorizontalStrut(10));
+		
+		top.add(this.size = new JLabel(FileUtils.humanizeBytes(sf.getSize())));
+		this.size.setForeground(Color.LIGHT_GRAY);
+		this.coloredComponents.add(this.size);
+		
+		this.container.add(top, BorderLayout.NORTH);
 		this.label.setIcon(icon);
 
 		if (sf instanceof Observable) {
