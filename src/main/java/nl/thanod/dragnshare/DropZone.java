@@ -107,8 +107,11 @@ public class DropZone extends JDialog implements Listener {
 			
 			@Override
 			public void keyPressed(KeyEvent e) {
-				if (e.getKeyCode() == KeyEvent.VK_DELETE){
-					DropZone.this.list.getModel().removeAll(DropZone.this.list.getSelector().getSelected());
+				if (e.getKeyCode() == KeyEvent.VK_DELETE || e.getKeyCode() == KeyEvent.VK_BACK_SPACE){
+					List<ShareInfo> elements = DropZone.this.list.getSelector().getSelected();
+					DropZone.this.list.getModel().removeAll(elements);
+					for (ShareInfo info:elements)
+						info.getSharedFile().remove();
 				}
 			}
 		});
@@ -120,7 +123,7 @@ public class DropZone extends JDialog implements Listener {
 
 			@Override
 			public void removedFromModel(int index, ShareInfo e) {
-				e.getSharedFile().remove();
+				e.getSharedFile().cancel();
 			}
 		});
 
@@ -169,7 +172,11 @@ public class DropZone extends JDialog implements Listener {
 			@Override
 			public void mouseClicked(MouseEvent e)
 			{
-				DropZone.this.list.getModel().removeAll(DropZone.this.list.getModel().getElements());
+				List<ShareInfo> elements = DropZone.this.list.getModel().getElements();
+				DropZone.this.list.getModel().removeAll(elements);
+				
+				for (ShareInfo info:elements)
+					info.getSharedFile().remove();
 			}
 		});
 		buttons.add(clearpane, BorderLayout.EAST);
@@ -262,7 +269,7 @@ public class DropZone extends JDialog implements Listener {
 			}
 			
 			@Override
-			public void remove() {
+			public void cancel() {
 				share.cancel();
 			}
 			
@@ -294,6 +301,12 @@ public class DropZone extends JDialog implements Listener {
 			@Override
 			public ColorScheme getColorScheme() {
 				return ColorScheme.OFFERED;
+			}
+
+			@Override
+			public void remove() {
+				// TODO Auto-generated method stub
+				
 			}
 		});
 	}
@@ -373,6 +386,7 @@ public class DropZone extends JDialog implements Listener {
 		info.setMonitor(new ShareInfo.Monitor() {
 			@Override
 			public void onRemove(ShareInfo info) {
+				info.getSharedFile().remove();
 				DropZone.this.list.getModel().remove(info);
 			}
 
@@ -407,7 +421,6 @@ public class DropZone extends JDialog implements Listener {
 	}
 
 	public static void main(String... args) {
-
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		} catch (Throwable ball) {

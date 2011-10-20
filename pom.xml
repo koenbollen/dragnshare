@@ -22,12 +22,13 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>osxappbundle-maven-plugin</artifactId>
-				<version>1.0-alpha-1</version>
+				<version>1.0-alpha-2</version>
 				<configuration>
 					<bundleName>Drag'n Share</bundleName>
 					<iconFile>${basedir}/Dragon Ball.icns</iconFile>
 					<mainClass>nl.thanod.dragnshare.DropZone</mainClass>
 					<jvmVersion>1.6+</jvmVersion>
+					<vmOptions>-Dapple.awt.UIElement=true</vmOptions>
 				</configuration>
 				<executions>
 					<execution>

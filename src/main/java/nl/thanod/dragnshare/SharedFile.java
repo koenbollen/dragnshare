@@ -22,7 +22,7 @@ public interface SharedFile {
 	
 	boolean isReady();
 	
-	void remove();
+	void cancel();
 	
 	boolean shouldStart();
 	
@@ -31,4 +31,9 @@ public interface SharedFile {
 	String getStatus();
 	
 	void setView( ShareInfo view );
+
+	/**
+	 * 
+	 */
+	void remove();
 }

@@ -105,8 +105,12 @@ public class ReceivedSharedFile extends Observable implements SharedFile, Receiv
 	 * @see nl.thanod.dragnshare.SharedFile#remove()
 	 */
 	@Override
-	public void remove() {
+	public void cancel() {
 		this.receiver.cancel();
+	}
+	
+	@Override
+	public void remove(){		
 		FileUtils.clean( this.receiver.getFile() );
 	}
 
