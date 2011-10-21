@@ -148,9 +148,13 @@ public class Settings extends Properties
 	}
 	public void setLocation( Point p )
 	{
-		Dimension size = Toolkit.getDefaultToolkit().getScreenSize();
-		p.x = (p.x + (size.width * 10)) % size.width;
-		p.y = (p.y + (size.height * 10)) % size.height;
+		// If linux, round location on screensize in case of multiple desktops.
+		if( OS.isLinux() ) 
+		{
+			Dimension size = Toolkit.getDefaultToolkit().getScreenSize();
+			p.x = (p.x + (size.width * 10)) % size.width;
+			p.y = (p.y + (size.height * 10)) % size.height;
+		}
 		this.setProperty("location_x", Integer.toString(p.x));
 		this.setProperty("location_y", Integer.toString(p.y));
 	}

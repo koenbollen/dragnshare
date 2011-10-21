@@ -59,14 +59,6 @@ public class FileTransferable implements Transferable
 		this.flavors = new DataFlavor[] { DataFlavor.javaFileListFlavor, TEXT_URI_FLAVOR, GNOMEFILELIST_FLAVOR };
 	}
 
-	static FileTransferable createFileInTempDirectory(String filename) throws IOException
-	{
-		File dir = new File(System.getProperty("java.io.tmpdir"));
-		File f = new File(dir, filename);
-		f.createNewFile();
-		return new FileTransferable(Collections.singletonList(f));
-	}
-
 	public List<File> getFiles()
 	{
 		return this.files;

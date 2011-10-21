@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import nl.thanod.util.OS;
@@ -31,17 +32,19 @@ public class Clipper
 		this.listeners = new ArrayList<FileDrop.Listener>();
 		this.clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 		this.listeners.add( listener );
-		dropzone.addKeyListener(new KeyAdapter() {
+		this.dropzone.list.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyReleased(KeyEvent e)
 			{
 				if( e.isConsumed() )
 					return;
+				
 				boolean meta = false;
 				if (OS.isOSX() && e.isMetaDown())
 					meta = true;
-				else if (e.isControlDown())
+				else if (!OS.isOSX() && e.isControlDown())
 					meta = true;
+				
 				if (meta && e.getKeyCode() == KeyEvent.VK_V)
 					Clipper.this.paste();
 				if (meta && ( e.getKeyCode() == KeyEvent.VK_X || e.getKeyCode() == KeyEvent.VK_C ) )
@@ -67,6 +70,7 @@ public class Clipper
 		Transferable tr = this.clipboard.getContents(null);
 		if (tr == null)
 			return;
+		System.out.println(Arrays.toString(tr.getTransferDataFlavors()));
 		if (tr.isDataFlavorSupported(DataFlavor.javaFileListFlavor))
 		{
 			try

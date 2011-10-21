@@ -130,6 +130,7 @@ public class DropZone extends JDialog implements Listener {
 				}
 			}
 		});
+		
 		this.list.addKeyListener(new KeyListener() {
 			
 			@Override
