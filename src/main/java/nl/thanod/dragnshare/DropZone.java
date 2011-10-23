@@ -32,6 +32,8 @@ import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import javax.imageio.ImageIO;
+import javax.swing.BorderFactory;
+import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -225,9 +227,20 @@ public class DropZone extends JDialog implements Listener {
 					{
 						if( !Settings.instance.getBool("confirmQuit", true) )
 							System.exit(0);
-						int r = JOptionPane.showConfirmDialog(DropZone.this, "Are you sure you want to quit?", "Drag'n Quit", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);						
+						
+						JCheckBox checkbox = new JCheckBox("Do not show this message again.");  
+						JLabel message = new JLabel("You are about to quit Drag'n Share completely, doing so will leave you unable to receive files.");
+						JLabel question = new JLabel("Are you sure you want to quit?");
+						message.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+						Object[] params = {message, question, checkbox};  
+						int r = JOptionPane.showConfirmDialog(DropZone.this, params, "Drag'n Quit", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);  
+						boolean dontShow = checkbox.isSelected();
 						if( r == JOptionPane.YES_OPTION )
+						{  
+							if( dontShow )
+								Settings.instance.setBool( "confirmQuit", false );
 							System.exit(0);	
+						}
 					}
 				});
 			}
