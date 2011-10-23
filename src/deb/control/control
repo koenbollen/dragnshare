@@ -1,0 +1,9 @@
+Package: dragnshare
+Version: 0.1-beta
+Section: misc
+Priority: optional
+Architecture: all
+Depends: sun-java6-jre | openjdk-6-jre | openjdk-7-jre | openjdk-6-jre-headless | openjdk-7-jre-headless
+Maintainer: Koen Bollen <meneer@koenbollen.nl>
+Description: Drag'n Share - Share files in a local network in two drags (completely insecure).
+Distribution: development

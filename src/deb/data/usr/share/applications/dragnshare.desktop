@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Drag'n Share
+Comment=Share files in a local network in two drags (completely insecure).
+Icon=dragnshare
+Exec=dragnshare
+Terminal=false
+Categories=Tools;Network

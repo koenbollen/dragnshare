@@ -1,0 +1,6 @@
+#!/bin/bash
+# Drag'n Share - Share files in a local network in two drags (completely insecure).
+# Koen Bollen <meneer@koenbollen.nl>
+# Nils Dijk <me@thanod.nl>
+# 2011, GPL
+exec java -jar /usr/share/lib/dragnshare*.jar
