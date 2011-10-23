@@ -12,7 +12,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import nl.thanod.util.OS;
@@ -70,7 +69,6 @@ public class Clipper
 		Transferable tr = this.clipboard.getContents(null);
 		if (tr == null)
 			return;
-		System.out.println(Arrays.toString(tr.getTransferDataFlavors()));
 		if (tr.isDataFlavorSupported(DataFlavor.javaFileListFlavor))
 		{
 			try

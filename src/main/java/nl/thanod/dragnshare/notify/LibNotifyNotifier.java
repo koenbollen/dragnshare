@@ -8,16 +8,21 @@ public class LibNotifyNotifier implements Notifier
 {
 	public static final String EXECUTABLE = "notify-send";
 	
-	private boolean executableChecked = false;
-	private boolean haveExecutable = false;
+	private static boolean executableChecked = false;
+	private static boolean haveExecutable = false;
 
 	@Override
 	public boolean canNotify()
 	{
-		if( this.executableChecked )
-			return this.haveExecutable;
+		return LibNotifyNotifier.hasExecutable();
+	}
+	
+	private static boolean hasExecutable()
+	{
+		if( LibNotifyNotifier.executableChecked )
+			return LibNotifyNotifier.haveExecutable;
 
-		this.executableChecked = true;
+		LibNotifyNotifier.executableChecked = true;
 		Process p = null;
 		try
 		{
@@ -28,10 +33,10 @@ public class LibNotifyNotifier implements Notifier
 			{
 				System.err.println("missing `" + LibNotifyNotifier.EXECUTABLE + "`. Please install the 'libnotify-bin' package." ); 
 			}
-			return (this.haveExecutable=false);
+			return (LibNotifyNotifier.haveExecutable=false);
 		}
 		p.destroy();
-		return (this.haveExecutable=true);
+		return (LibNotifyNotifier.haveExecutable=true);
 	}
 
 	@Override
@@ -48,6 +53,11 @@ public class LibNotifyNotifier implements Notifier
 		{
 			e.printStackTrace();
 		}
+	}
+	
+	public static boolean isAvailable()
+	{
+		return OS.isLinux() && LibNotifyNotifier.hasExecutable();
 	}
 
 }

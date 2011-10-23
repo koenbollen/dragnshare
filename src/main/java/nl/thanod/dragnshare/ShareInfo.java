@@ -5,20 +5,31 @@ package nl.thanod.dragnshare;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+import javax.swing.JComponent;
+import javax.swing.JFileChooser;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.border.Border;
 
 import nl.thanod.dragnshare.ui.DottedLineBorder;
 import nl.thanod.dragnshare.ui.InteractiveList.ListViewable;
+import nl.thanod.dragnshare.ui.UIConstants;
 import nl.thanod.util.FileUtils;
 
 /**
@@ -76,13 +87,19 @@ public class ShareInfo extends JPanel implements ListViewable, Observer {
 		this.setPreferredSize(new Dimension(0, 70));
 
 		Icon icon = chooser.getIcon(sf.getFile());
-		JPanel top = new JPanel(new FlowLayout(FlowLayout.LEADING,0,3));
+		JPanel top = new JPanel(new FlowLayout(FlowLayout.LEADING, 0, 3));
 		top.setOpaque(false);
 		top.add(this.label = new JLabel(sf.getName()));
+		this.label.setFont(UIConstants.DefaultFont);
 		
 		top.add(Box.createHorizontalStrut(10));
 		
 		top.add(this.size = new JLabel(FileUtils.humanizeBytes(sf.getSize())));
+		
+		// match the size of the file icon:
+		this.size.setIcon(new ImageIcon(new BufferedImage(1, icon.getIconHeight(), BufferedImage.TYPE_INT_ARGB)));
+		this.size.setAlignmentX(BOTTOM_ALIGNMENT);
+		this.size.setFont(UIConstants.StatusFont);
 		this.size.setForeground(Color.LIGHT_GRAY);
 		this.coloredComponents.add(this.size);
 		
@@ -94,10 +111,11 @@ public class ShareInfo extends JPanel implements ListViewable, Observer {
 		}
 		
 		this.container.add(this.status = new JLabel(this.sf.getStatus()), BorderLayout.SOUTH);
+		this.status.setFont(UIConstants.StatusFont);
 		this.status.setForeground(Color.LIGHT_GRAY);
 		this.status.setBorder(BorderFactory.createEmptyBorder(0, icon.getIconWidth() + 4, 0, 0));
 
-		int vgap = ((this.getPreferredSize().height - icon.getIconHeight()) / 2 ) - 7;
+		int vgap = 3 + icon.getIconHeight() + 2;
 		this.buttons = new JPanel(new FlowLayout(FlowLayout.LEADING, 2, vgap));
 		this.coloredComponents.add(this.buttons);
 		
@@ -107,9 +125,6 @@ public class ShareInfo extends JPanel implements ListViewable, Observer {
 			this.coloredComponents.add(this.start);
 			this.buttons.add(this.start);
 			this.start.addMouseListener(new MouseAdapter() {
-				/* (non-Javadoc)
-				 * @see java.awt.event.MouseAdapter#mouseClicked(java.awt.event.MouseEvent)
-				 */
 				@Override
 				public void mouseClicked(MouseEvent e) {
 					if (e.getClickCount() != 1 || e.getButton() != MouseEvent.BUTTON1)
@@ -236,7 +251,7 @@ public class ShareInfo extends JPanel implements ListViewable, Observer {
 		if (p > 0f && p < 1f){
 			if (this.progress == null){
 				this.progress = new JProgressBar(0,100);
-				this.container.add(this.progress);
+				this.container.add(this.progress, BorderLayout.CENTER);
 				this.container.revalidate();
 			}
 			this.progress.setValue((int)(100*p));
@@ -254,6 +269,10 @@ public class ShareInfo extends JPanel implements ListViewable, Observer {
 		}
 		
 		this.status.setText(this.sf.getStatus());
+
+		if( this.sf.isReady() )
+			this.setCursor(new Cursor(Cursor.HAND_CURSOR));
+		
 		updateView();
 	}
 

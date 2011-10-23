@@ -79,7 +79,7 @@ public interface Notifier {
 				return;
 			Notifier notifier = Factory.notifier();
 			if( notifier != null )
-				notifier.notify(type, title, message);
+				notifier.notify(type, "Drag'n Share - " + title, message);
 		}
 		
 	}

@@ -18,8 +18,8 @@ import java.awt.dnd.DragGestureListener;
 import java.awt.dnd.DragSource;
 import java.awt.dnd.DragSourceAdapter;
 import java.awt.dnd.DragSourceDropEvent;
+import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
@@ -52,9 +52,10 @@ import nl.thanod.dragnshare.notify.Notifier;
 import nl.thanod.dragnshare.notify.Notifier.Type;
 import nl.thanod.dragnshare.ui.InteractiveList;
 import nl.thanod.dragnshare.ui.InteractiveListModel;
-import nl.thanod.dragnshare.ui.SettingsPane;
+import nl.thanod.dragnshare.ui.PrefPane;
 import nl.thanod.dragnshare.ui.TopLineBorder;
 import nl.thanod.dragnshare.ui.Tray;
+import nl.thanod.dragnshare.ui.UIConstants;
 import nl.thanod.util.ScreenInfo;
 import nl.thanod.util.Settings;
 
@@ -131,14 +132,7 @@ public class DropZone extends JDialog implements Listener {
 			}
 		});
 		
-		this.list.addKeyListener(new KeyListener() {
-			
-			@Override
-			public void keyTyped(KeyEvent paramKeyEvent) {}
-			
-			@Override
-			public void keyReleased(KeyEvent paramKeyEvent) {}
-			
+		this.list.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyPressed(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_DELETE || e.getKeyCode() == KeyEvent.VK_BACK_SPACE){
@@ -163,6 +157,7 @@ public class DropZone extends JDialog implements Listener {
 
 		JLabel drop;
 		this.list.setDrop(drop = new JLabel("drop here"));
+		drop.setFont(UIConstants.DropHereFont);
 		drop.setHorizontalAlignment(SwingConstants.CENTER);
 		drop.setForeground(Color.LIGHT_GRAY);
 		
@@ -230,7 +225,7 @@ public class DropZone extends JDialog implements Listener {
 					{
 						if( !Settings.instance.getBool("confirmQuit", true) )
 							System.exit(0);
-						int r = JOptionPane.showConfirmDialog(DropZone.this, "Are you sure you want to quit?", "Drag'n Quit", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+						int r = JOptionPane.showConfirmDialog(DropZone.this, "Are you sure you want to quit?", "Drag'n Quit", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);						
 						if( r == JOptionPane.YES_OPTION )
 							System.exit(0);	
 					}
@@ -245,7 +240,7 @@ public class DropZone extends JDialog implements Listener {
 			@Override
 			public void mouseClicked(MouseEvent e)
 			{
-				new SettingsPane(DropZone.this).setVisible(true);
+				new PrefPane(DropZone.this).setVisible(true);
 			}
 		});
 		quitpref.setBackground(Color.WHITE);
