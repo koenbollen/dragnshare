@@ -55,10 +55,14 @@ public class Tray extends TrayIcon implements Runnable
 
 	private static Image staticinit()
 	{
+		URL icon = null;
 		Dimension size = systray.getTrayIconSize();
-
 		String os = OS.getString();
-		URL icon = Tray.class.getClassLoader().getResource("dragn-icon-"+os+".png");
+		icon = Tray.class.getClassLoader().getResource("dragn-icon-"+os+"-"+size.width+"x"+size.height+".png");
+		if( icon == null )
+			icon = Tray.class.getClassLoader().getResource("dragn-icon-"+os+".png");
+		if( icon == null )
+			icon = Tray.class.getClassLoader().getResource("dragn-icon-"+size.width+"x"+size.height+".png");
 		if( icon == null )
 			icon = Tray.class.getClassLoader().getResource("dragn-icon.png");
 		return createImage( icon, size );

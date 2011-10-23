@@ -407,12 +407,12 @@ public class DropZone extends JDialog implements Listener {
 	}
 
 	public static void main(String... args) {
-		Settings.singleInstance();
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		} catch (Throwable ball) {
 			ball.printStackTrace();
 		}
+		Settings.singleInstance();
 
 		new DropZone();
 	}
