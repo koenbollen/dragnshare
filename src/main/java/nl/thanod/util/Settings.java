@@ -4,10 +4,16 @@ import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.io.*;
+import java.io.ObjectInputStream.GetField;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
+import java.nio.channels.OverlappingFileLockException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
+
+import javax.swing.JOptionPane;
 
 /**
  * @author Koen Bollen <meneer@koenbollen>
@@ -50,7 +56,7 @@ public class Settings extends Properties
 			}
 		});
 	}
-	
+
 	public void store()
 	{
 		List<Listener> listeners = new ArrayList<Settings.Listener>(this.listeners);
@@ -81,10 +87,12 @@ public class Settings extends Properties
 	{
 		this.clear();
 		File file = findFile();
-		InputStream in = null;
+		
+		FileInputStream in = null;
 		try
-		{
+		{			
 			in = new FileInputStream(file);
+			
 			this.loadFromXML(in);
 		} catch( FileNotFoundException e )
 		{
@@ -103,6 +111,53 @@ public class Settings extends Properties
 		for( Listener l : listeners )
 			if( l != null )
 				l.postLoad(instance);
+	}
+	
+	public static void singleInstance(){
+		boolean locked;
+		try {
+			locked = lock(findFile());
+		} catch (Throwable ball){
+			locked = false;
+		}
+		if (!locked){
+			JOptionPane.showMessageDialog(null, "Drag'n Share is already running.\nPlease open the application by clicking the icon in the system tray.","Already open", JOptionPane.INFORMATION_MESSAGE);
+			System.exit(-1);
+		}
+	}
+
+	/**
+	 * @param file
+	 * @throws FileNotFoundException 
+	 */
+	private static boolean lock(File file) throws FileNotFoundException {
+		final RandomAccessFile ra = new RandomAccessFile(file, "rw");
+		final FileChannel ch = ra.getChannel();
+		try {
+			if (ch.tryLock() == null)
+				return false;
+		} catch (IOException ball) {
+			return false;
+		}
+		
+		Runtime.getRuntime().addShutdownHook(new Thread(){
+			@Override
+			public void run()
+			{
+				try {
+					ch.close();
+				} catch (IOException ball) {
+					ball.printStackTrace();
+				}
+				try {
+					ra.close();
+				} catch (IOException ball) {
+					ball.printStackTrace();
+				}
+			}
+		});
+		
+		return true;
 	}
 
 	public void addListener( Listener listener )
