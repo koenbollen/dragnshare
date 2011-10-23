@@ -9,6 +9,7 @@
 			body {
 				margin-top: 0;
 				background-color: white;
+				font-size: 10pt;
 				font-family: Helvetica, Arial, FreeSans, san-serif;
 				color: #000000;
 			}
@@ -23,7 +24,7 @@
 			h1 { font-size: 3.8em; color: #00a; margin-bottom: 3px; }
 			h1 .small { font-size: 0.4em; }
 			h1 a { text-decoration: none }
-			h2 { font-size: 1.5em; color: #00a; }
+			h2 { margin-top: 30px; font-size: 1.5em; color: #00a; }
 			h3 { text-align: center; color: #00a; }
 			a { color: #00a; }
 			a:hover {color: black; text-decoration: none; }
@@ -36,10 +37,86 @@
 				background: url('background.png');
 				width: 256px;
 				height: 256px;
-				margin: 20px 50px 0 0;
+				margin: 20px 50px 20px 50px;
 				float: right;
 			}
+
+			ul#downloads
+			{
+				padding: 0;
+				margin: 20px;
+			}
+			ul#downloads li
+			{
+				display: inline-block;
+				margin: 2px;
+				list-style: none;
+
+			}
+			ul#downloads li a
+			{
+				display: inline-block;
+				width: 150px;
+				padding: 10px 0;
+
+				color: #445;
+				text-decoration: none;
+				text-align: center;
+
+				filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#f6f8ff', endColorstr='#dddddd'); /* for IE */
+				background: -webkit-gradient(linear, left top, left bottom, from(#f6f8ff), to(#ddd)); /* for webkit browsers */
+				background: -moz-linear-gradient(top,  #f6f8ff,  #ccd8dd); /* for firefox 3.6+ */
+				border: 1px solid #aaa;
+				-webkit-border-radius: 5px;
+				-moz-border-radius: 5px;
+				border-radius: 5px;
+			}
+			ul#downloads li a:hover
+			{
+				border-color: #88e;
+				color: #00a;
+			}
+			ul#downloads li.large a
+			{
+				width: 310px;
+				padding: 20px 0;
+				font-size: 14pt;
+			}
+			ul#downloads li.last
+			{
+				display: block;
+			}
+			ul#downloads li.last a
+			{
+				width: 310px;
+			}
+			ul#downloads li a img
+			{
+				margin: 0 5px 0 0;
+				width: 16px;
+				height: 16px;
+			}
+
 		</style>
+		<script language="javascript" type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+		<script language="javascript" type="text/javascript">
+			<!--
+			$(document).ready(function() {
+				var os="windows";
+				if (navigator.appVersion.indexOf("Win")!=-1) os="windows";
+				if (navigator.appVersion.indexOf("Mac")!=-1) os="mac";
+				if (navigator.appVersion.indexOf("X11")!=-1) os="linux";
+				if (navigator.appVersion.indexOf("Linux")!=-1) os="linux";
+				$("ul#downloads li").each(function(i,e) {
+					$(e).removeClass( "large" );
+				});
+				var e = $("ul#downloads li."+os);
+				e.addClass("large");
+				e.remove();
+				e.insertBefore( $("ul#downloads li:first") );
+			});
+			//-->
+		</script>
 	</head>
 
 	<body>
@@ -47,36 +124,47 @@
 
 		<div id="container">
 
-			<div class="download">
-				<a href="http://github.com/koenbollen/dragnshare/zipball/master">
-					<img border="0" width="90" src="http://github.com/images/modules/download/zip.png"></a>
-				<a href="http://github.com/koenbollen/dragnshare/tarball/master">
-					<img border="0" width="90" src="http://github.com/images/modules/download/tar.png"></a>
-			</div>
-
 			<h1><a href="http://github.com/koenbollen/dragnshare">Drag'n Share</a></h1>
 
 			<div class="description">
 				Share files in a local network in two drags (completely insecure).
 			</div>
 
-			<p>Drag'n Share is a small cross-platform application that lets you share files really easy in a local network. You drag your file on one machine and it appears in a popup on all other machines in the network where you can drag it from.</p>
+			<p>Drag'n Share is a very easy to use application with which you
+			can share files and directories across computers in a local
+			network. This works on Windows, Mac OSX and Linux and requires no
+			internet or login credentials what so ever. And above all, without
+			any regard to privacy or security.</p>
 
 			<div class="logo"></div>
-			<h2>Dependencies</h2>
-			<p>Java 1.6+</p>
-			<h2>Install</h2>
-			<p>Pre-built packages and installers coming soon!</p>
+
+			<h2>Usage</h2>
+			<p>When Drag'n Share is launched it will show it self in the system
+			tray (the icons near the clock). Clicking on the tray icon will
+			show the DropZone.</p>
+			<p>To share a file you open the the DropZone and drop a file or
+			directory in this window. Other users in your network will see the
+			dropped file and can drag it back out the window. Share and receive
+			file and directories in one drag.</p>
+
+			<h2>Download: Drag'n Share 0.1 beta</h2>
+			<ul id="downloads">
+				<li class="large windows"><a href="dist/dragnshare-0.1-beta-installer.exe"><img src="windows.png" border="0" width="16" height="16" alt="windows"/>Windows</a></li>
+				<li class="mac"><a href="dist/dragnshare-0.1-beta-app.zip"><img src="mac.png" border="0" width="16" height="16" alt="windows"/>Mac OSX</a></li>
+				<li class="linux"><a href="dist/dragnshare_0.1+beta.deb"><img src="ubuntu.png" border="0" width="16" height="16" alt="windows"/>.deb for Ubuntu</a></li>
+				<li class="last"><a href="dist/dragnshare-0.1-beta.jar"><img src="java.png" border="0" width="16" height="16" alt="windows"/>Java .jar Application</a></li>
+			</ul>
+
 			<h2>Authors</h2>
-			<p>
-			Koen Bollen (meneer@koenbollen.nl)<br/>
-			Nils Dijk (me@thanod.nl)<br/>
-			</p>
+			<ul>
+				<li>Koen "Kaji" Bollen (<a href="&#109;&#x61;&#105;l&#116;&#x6F;:&#x6D;&#x65;&#x6E;&#x65;&#101;&#114;&#64;&#x6B;&#x6F;&#x65;&#110;&#x62;&#111;l&#x6C;&#x65;&#110;&#46;&#x6E;l">&#x6D;&#x65;&#x6E;&#x65;&#101;&#114;&#64;&#x6B;&#x6F;&#x65;&#110;&#x62;&#111;l&#x6C;&#x65;&#110;&#46;&#x6E;l</a>)</li>
+				<li>Nils "ThaNODnl" Dijk (<a href="m&#97;&#x69;lt&#111;:&#x6D;&#101;&#64;&#x74;&#104;&#x61;n&#x6F;d&#46;&#110;&#108;">&#x6D;&#101;&#64;&#x74;&#104;&#x61;n&#x6F;d&#46;&#110;&#108;</a>)</li>
+			</ul>
+
 			<h2>License</h2>
 			<p><a href="http://www.gnu.org/licenses/gpl-3.0.txt" target="_blank">GPLv3</a></p>
 
-
-			<h2>Download</h2>
+			<h2>Source</h2>
 			<p>
 			You can download this project in either
 			<a href="http://github.com/koenbollen/dragnshare/zipball/master">zip</a> or
