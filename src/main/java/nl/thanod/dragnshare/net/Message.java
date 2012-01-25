@@ -6,7 +6,9 @@ package nl.thanod.dragnshare.net;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.net.InetAddress;
 import java.net.ProtocolException;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -16,9 +18,16 @@ import java.util.UUID;
 public class Message implements Serializable {
 
 	public enum Type {
+		
+		// Message types for file sharing:
 		ACCEPT,
 		FILE,
-		DIRECTORY;
+		DIRECTORY,
+		
+		// Message types for the YellowPages:
+		JOIN,
+		NETWORK,
+		HELLO;
 
 		public static Type getByName(String name) throws ProtocolException {
 			name = name.toLowerCase();
@@ -55,11 +64,11 @@ public class Message implements Serializable {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((id == null) ? 0 : id.hashCode());
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
-		result = prime * result + port;
-		result = prime * result + (int) (size ^ (size >>> 32));
-		result = prime * result + ((type == null) ? 0 : type.hashCode());
+		result = prime * result + ((this.id == null) ? 0 : this.id.hashCode());
+		result = prime * result + ((this.name == null) ? 0 : this.name.hashCode());
+		result = prime * result + this.port;
+		result = prime * result + (int) (this.size ^ (this.size >>> 32));
+		result = prime * result + ((this.type == null) ? 0 : this.type.hashCode());
 		return result;
 	}
 
@@ -72,21 +81,21 @@ public class Message implements Serializable {
 		if (getClass() != obj.getClass())
 			return false;
 		Message other = (Message) obj;
-		if (id == null) {
+		if (this.id == null) {
 			if (other.id != null)
 				return false;
-		} else if (!id.equals(other.id))
+		} else if (!this.id.equals(other.id))
 			return false;
-		if (name == null) {
+		if (this.name == null) {
 			if (other.name != null)
 				return false;
-		} else if (!name.equals(other.name))
+		} else if (!this.name.equals(other.name))
 			return false;
-		if (port != other.port)
+		if (this.port != other.port)
 			return false;
-		if (size != other.size)
+		if (this.size != other.size)
 			return false;
-		if (type != other.type)
+		if (this.type != other.type)
 			return false;
 		return true;
 	}
@@ -123,6 +132,27 @@ public class Message implements Serializable {
 		} catch (NumberFormatException ball) {
 			throw new IOException("could not parse message", ball);
 		}
+	}
+
+	public static Message join()
+	{
+		return new Message( Type.JOIN, new UUID(0,0), -1, -1, "" );
+	}
+	public static Message hello( UUID id )
+	{
+		return new Message( Type.HELLO, id, -1, -1, "" );
+	}
+	public static Message network( UUID id, Set<InetAddress> network )
+	{
+		long size = network.size();
+		StringBuilder data = new StringBuilder();
+		for( InetAddress a : network )
+		{
+			if( data.length() > 0 )
+				data.append( ',' );
+			data.append( a.getHostAddress() );
+		}
+		return new Message( Type.NETWORK, id, -1, size, data.toString() );
 	}
 
 	private static long measureLength(File file) {

@@ -48,6 +48,14 @@ public class MulticastSharer implements Sharer, Runnable {
 		this.group = InetAddress.getByName(MulticastSharer.GROUP);
 		this.socket = new MulticastSocket(this.port);
 		this.socket.joinGroup(this.group);
+		
+		if( Settings.instance.getBool( "beYellow" ) )
+		{
+			String master = Settings.instance.getProperty( "yellowMaster" );
+			if( master != null && master.length() != 0 )
+				YellowPages.getInstance(this).join( master );
+		}
+			
 	}
 
 	/*
@@ -104,6 +112,12 @@ public class MulticastSharer implements Sharer, Runnable {
 						ball.printStackTrace();
 					}
 					break;
+				case JOIN:
+				case HELLO:
+				case NETWORK:
+					if( Settings.instance.getBool( "beYellow" ) )
+						YellowPages.getInstance(this).onMessageReceived( m, packet.getAddress() );
+					break;
 			}
 		}
 	}
@@ -121,7 +135,31 @@ public class MulticastSharer implements Sharer, Runnable {
 			packet.setAddress(target);
 			this.socket.send(packet);
 		}
-		else if( Settings.instance.getBool("bruteForceDiscover" ))
+		else
+		{
+			if( Settings.instance.getBool( "beYellow" ) )
+			{
+				YellowPages pages = YellowPages.getInstance( this );
+				for( InetAddress a : pages )
+				{
+					packet.setAddress(a);
+					this.socket.send(packet);
+				}
+				if( Settings.instance.getBool( "alsoBoardcast" ) )
+				{
+					broadcast( packet );
+				}
+			}
+			else
+			{
+				broadcast( packet );
+			}
+		}
+	}
+
+	private void broadcast( DatagramPacket packet ) throws SocketException, UnknownHostException, IOException
+	{
+		if( Settings.instance.getBool( "bruteForceDiscover" ) )
 		{
 			for (NetworkInterface dev : Collections.list(NetworkInterface.getNetworkInterfaces()) ) {
 				if(dev.isLoopback() || !dev.isUp())

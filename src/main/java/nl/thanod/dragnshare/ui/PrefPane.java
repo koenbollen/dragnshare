@@ -1,35 +1,12 @@
 package nl.thanod.dragnshare.ui;
 
-import java.awt.BorderLayout;
-import java.awt.Desktop;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
-import java.awt.Window;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.*;
+import java.awt.event.*;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTabbedPane;
-import javax.swing.JTextField;
-import javax.swing.SwingConstants;
-import javax.swing.UIManager;
-import javax.swing.WindowConstants;
+import javax.swing.*;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 
@@ -192,6 +169,7 @@ public class PrefPane extends JDialog
 
 	private void createNetworkingPane(JTabbedPane tabs)
 	{
+		
 		JPanel p = new JPanel(new BorderLayout());
 		JPanel settings = new JPanel(new GridLayout(0,1, 5, 5));
 		settings.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -243,7 +221,66 @@ public class PrefPane extends JDialog
 		limit.add(adl);
 		limit.add(t2);
 		settings.add(limit);
+		
 
+		final JPanel yellowPagesPrefs = new JPanel(new FlowLayout(FlowLayout.LEADING, 0,0));
+		
+		final JTextField yellowServer = new JTextField("", 10);
+		final JCheckBox beYellow = new JCheckBox("Use entry point to create a network:");
+		final JCheckBox alsoBoardcast = new JCheckBox("Also use the default broadcast protocol");
+		yellowServer.setToolTipText( "enter an ip-addresses or a hostnames (comma seperated)" );
+		yellowServer.setFont(UIConstants.DefaultFont);
+		beYellow.setFont(UIConstants.DefaultFont);
+		alsoBoardcast.setFont(UIConstants.DefaultFont);
+		yellowServer.setEnabled( Settings.instance.getBool("beYellow") );
+		beYellow.setSelected( Settings.instance.getBool("beYellow") );
+		alsoBoardcast.setSelected( Settings.instance.getBool("alsoBoardcast") );
+		alsoBoardcast.setEnabled( Settings.instance.getBool("beYellow") );
+		if( beYellow.isSelected() )
+			yellowServer.setText( Settings.instance.getProperty( "yellowMaster" ) );
+		yellowServer.addCaretListener( new CaretListener() {
+			@Override
+			public void caretUpdate( CaretEvent arg0 )
+			{
+				if(beYellow.isSelected())
+					Settings.instance.setProperty( "yellowMaster", yellowServer.getText() );
+			}
+		} );
+		beYellow.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				Settings.instance.setBool("beYellow", beYellow.isSelected());
+				yellowServer.setEnabled( beYellow.isSelected() );
+				alsoBoardcast.setEnabled( beYellow.isSelected() );
+				if( beYellow.isSelected() )
+				{	
+					yellowServer.setText( Settings.instance.getProperty( "yellowMaster" ) );
+					yellowServer.requestFocus();
+					yellowServer.selectAll();
+				}else
+				{
+					yellowServer.setText( "" );
+				}
+				
+			}
+		});
+		beYellow.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				Settings.instance.setBool("alsoBoardcast", alsoBoardcast.isSelected());
+			}
+		});
+
+		yellowPagesPrefs.add( beYellow );
+		yellowPagesPrefs.add( yellowServer );
+		yellowPagesPrefs.add( new JLabel(" (restart required)") );
+		settings.add( yellowPagesPrefs );
+		settings.add( alsoBoardcast );
+
+		
+		
 		final JCheckBox bruteForceDiscover = new JCheckBox("Use a blunt technique to boardcast files shared across the network.");
 		bruteForceDiscover.setFont(UIConstants.DefaultFont);
 		bruteForceDiscover.setSelected(Settings.instance.getBool("bruteForceDiscover"));
